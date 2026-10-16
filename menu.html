@@ -1,0 +1,2720 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-locale="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#F5F2EC" id="themeColorMeta" />
+<title>Smashed Burger — Digital Menu</title>
+<meta name="description" content="Smashed Burger Erbil — browse the menu and order from your table. Burgers, sides, sauces &amp; drinks." />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Smashed Burger" />
+<meta property="og:title" content="Smashed Burger — Digital Menu" />
+<meta property="og:description" content="Browse the menu and order from your table. Burgers, sides, sauces &amp; drinks — Erbil." />
+<meta property="og:url" content="https://smashedburgererbil.github.io/" />
+<meta property="og:image" content="https://smashedburgererbil.github.io/image/share-preview.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Smashed Burger logo" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://smashedburgererbil.github.io/image/share-preview.jpg" />
+<link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="image/favicon-192.png" />
+<link rel="apple-touch-icon" href="image/apple-touch-icon.png" />
+<link rel="manifest" href="menu.webmanifest" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Smashed Burger" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&family=Cairo:wght@400;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap"
+  rel="stylesheet"
+/>
+
+<style>
+  :root, html[data-theme="light"] {
+    --c-base:         245 242 236;
+    --c-surface:      255 255 255;
+    --c-surface-alt:  237 233 225;
+    --c-ink:          26 26 26;
+    --c-muted:        107 107 107;
+    --c-edge:         26 26 26;
+    --c-accent:       196 69 58;
+    --c-accent-hover: 168 55 46;
+    --c-hot:          168 55 46;
+    --shadow-card:    rgba(26,26,26,.10);
+  }
+  html[data-theme="dark"] {
+    --c-base:         24 24 27;
+    --c-surface:      39 39 42;
+    --c-surface-alt:  63 63 70;
+    --c-ink:          255 255 255;
+    --c-muted:        161 161 170;
+    --c-edge:         255 255 255;
+    --c-accent:       196 69 58;
+    --c-accent-hover: 168 55 46;
+    --c-hot:          220 90 80;
+    --shadow-card:    rgba(0,0,0,.7);
+  }
+</style>
+
+<script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.js"></script>
+
+<style>
+  :root { color-scheme: light; }
+  html[data-theme="dark"] { color-scheme: dark; }
+
+  html { -webkit-text-size-adjust: 100%; }
+  body { overscroll-behavior-y: none; }
+
+  body.intro-active > header,
+  body.intro-active > main,
+  body.intro-active > footer,
+  body.intro-active > #floatingBar,
+  body.intro-active > .ambient-only-dark {
+    display: none !important;
+  }
+
+  /* Arabic: Cairo. Kurdish (Sorani): Noto Sans Arabic, which covers ڕ ڵ ێ ۆ ە fully */
+  html[data-locale="ar"] { --rtl-font: 'Cairo', 'Noto Sans Arabic', system-ui, sans-serif; }
+  html[data-locale="ku"] { --rtl-font: 'Noto Sans Arabic', 'Cairo', system-ui, sans-serif; }
+  html[data-locale="ar"] body, html[data-locale="ku"] body,
+  html[data-locale="ar"] input, html[data-locale="ku"] input,
+  html[data-locale="ar"] button, html[data-locale="ku"] button,
+  html[data-locale="ar"] .font-display, html[data-locale="ku"] .font-display,
+  html[data-locale="ar"] .wordmark, html[data-locale="ku"] .wordmark,
+  html[data-locale="ar"] .menu-section-title, html[data-locale="ku"] .menu-section-title {
+    font-family: var(--rtl-font);
+  }
+  html[data-locale="ku"] body { line-height: 1.6; }
+  /* Letter-spacing breaks the joined letters of Arabic script */
+  html[data-locale="ar"] *, html[data-locale="ku"] * { letter-spacing: 0 !important; }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  [dir="rtl"] .rtl-flip { transform: scaleX(-1); }
+
+  .drawer {
+    transform: translateX(100%);
+    transition: transform .34s cubic-bezier(.22, 1, .36, 1);
+    will-change: transform;
+  }
+  [dir="rtl"] .drawer { transform: translateX(-100%); }
+  .drawer.is-open,
+  [dir="rtl"] .drawer.is-open { transform: translateX(0); }
+
+  .modal-panel {
+    transform: translateY(100%);
+    transition: transform .32s cubic-bezier(.22, 1, .36, 1), opacity .2s ease;
+    will-change: transform;
+  }
+  .modal-panel.is-open { transform: translateY(0); }
+  @media (min-width: 640px) {
+    .modal-panel { transform: translateY(14px) scale(.98); opacity: 0; }
+    .modal-panel.is-open { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important;
+      transition-duration: .001ms !important;
+    }
+  }
+
+  :focus-visible { outline: 2px solid rgb(var(--c-accent)); outline-offset: 2px; }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  .wordmark {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: .95;
+  }
+  .wordmark-sub {
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+  }
+
+  .intro-hidden { display: none !important; }
+
+  html[data-theme="light"] .ambient-only-dark { display: none; }
+
+  summary.footer-summary { list-style: none; cursor: pointer; }
+  summary.footer-summary::-webkit-details-marker { display: none; }
+  summary.footer-summary::marker { display: none; content: ''; }
+  details[open] .footer-chevron { transform: rotate(180deg); }
+  .footer-chevron { transition: transform .2s ease; }
+
+  .menu-section-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 900;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  [data-section] { scroll-margin-top: 220px; }
+  html { scroll-behavior: smooth; }
+
+  /* ── Category nav ── */
+  .cat-btn {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 4px 10px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: transform .25s cubic-bezier(.22,1,.36,1);
+  }
+  .cat-btn:active { transform: scale(.96); }
+
+  .cat-icon-wrap {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 9999px;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px rgba(196,69,58,.18);
+    transition:
+      background-color .28s ease,
+      box-shadow .28s ease,
+      transform .28s cubic-bezier(.22,1,.36,1);
+  }
+  @media (min-width: 640px) {
+    .cat-icon-wrap { width: 64px; height: 64px; }
+  }
+
+  .cat-icon-wrap svg {
+    width: 26px;
+    height: 26px;
+    stroke-width: 1.75;
+    color: rgb(var(--c-accent));
+    transition: color .28s ease, transform .28s cubic-bezier(.22,1,.36,1);
+  }
+  @media (min-width: 640px) {
+    .cat-icon-wrap svg { width: 30px; height: 30px; }
+  }
+
+  .cat-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--c-muted));
+    transition: color .28s ease;
+    white-space: nowrap;
+  }
+  @media (min-width: 640px) {
+    .cat-label { font-size: 12px; }
+  }
+
+  .cat-btn.is-active .cat-icon-wrap {
+    background: rgb(var(--c-accent));
+    box-shadow:
+      0 10px 24px -10px rgba(196,69,58,.55),
+      inset 0 0 0 1px rgba(196,69,58,.9);
+    transform: translateY(-2px);
+  }
+  .cat-btn.is-active .cat-icon-wrap svg {
+    color: #ffffff;
+    transform: scale(1.05);
+  }
+  .cat-btn.is-active .cat-label {
+    color: rgb(var(--c-ink));
+  }
+
+  .cat-btn .cat-dot {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    width: 5px;
+    height: 5px;
+    border-radius: 9999px;
+    background: rgb(var(--c-accent));
+    opacity: 0;
+    transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease;
+  }
+  .cat-btn.is-active .cat-dot {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+
+  .cat-btn:not(.is-active):hover .cat-icon-wrap {
+    background: rgba(196,69,58,.08);
+    box-shadow: inset 0 0 0 1px rgba(196,69,58,.35);
+  }
+  .cat-btn:not(.is-active):hover .cat-label {
+    color: rgb(var(--c-ink));
+  }
+
+  /* ── Item image container ── */
+  .item-media {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    overflow: hidden;
+  }
+  .item-media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    transition: transform .5s cubic-bezier(.22,1,.36,1);
+  }
+  .group:hover .item-media img { transform: scale(1.05); }
+
+  .intro-overlay {
+    background-color: rgba(70, 70, 75, 0.40);
+    backdrop-filter: blur(5px) saturate(0.9);
+    -webkit-backdrop-filter: blur(5px) saturate(0.9);
+    transition: background-color .3s ease;
+  }
+  html[data-theme="dark"] .intro-overlay {
+    background-color: rgba(15, 15, 18, 0.55);
+  }
+
+  /* ── Header brand logo — theme swap ── */
+  .header-logo-light { display: block; }
+  .header-logo-dark  { display: none; }
+  html[data-theme="dark"] .header-logo-light { display: none; }
+  html[data-theme="dark"] .header-logo-dark  { display: block; }
+
+  /* ── Hero slider ── */
+  #heroSlider {
+    position: relative;
+    overflow: hidden;
+    background: rgb(var(--c-surface-alt));
+    touch-action: pan-y;
+    user-select: none;
+  }
+  #heroTrack {
+    display: flex;
+    width: 100%;
+    transition: transform .55s cubic-bezier(.22,1,.36,1);
+    will-change: transform;
+  }
+  .hero-slide {
+    position: relative;
+    flex: 0 0 100%;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    min-height: 340px;
+    overflow: hidden;
+    background: rgb(var(--c-surface-alt));
+  }
+  @media (min-width: 640px)  { .hero-slide { aspect-ratio: 1 / 1;  } }
+  @media (min-width: 1024px) { .hero-slide { aspect-ratio: 4 / 3; } }
+
+  .hero-slide img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  /* Parallax: the whole slider drifts down slower than the page scrolls, and the menu below slides over it.
+     The photos keep their exact size and framing. */
+  #heroSlider { z-index: 0; will-change: transform; }
+  #grid, #emptyState {
+    position: relative;
+    z-index: 1;
+    background: rgb(var(--c-base));
+    /* stretch the background to the screen edges (the slider is full width) without moving the content */
+    box-shadow: 0 0 0 100vmax rgb(var(--c-base));
+    clip-path: inset(0 -100vmax);
+  }
+
+  /* Soft rise-in for cards and section titles as they scroll into view.
+     Uses an animation (not a transition) so it never fights the cards' own hover/press effects. */
+  .reveal { opacity: 0; }
+  .reveal.is-in {
+    opacity: 1;
+    animation: revealUp .6s cubic-bezier(.22,1,.36,1) var(--reveal-delay, 0ms) backwards;
+  }
+  @keyframes revealUp {
+    from { opacity: 0; transform: translateY(16px) scale(.98); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* Cart button gives a little hop when something is added */
+  @keyframes cartHop {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    30%      { transform: translateY(-4px) rotate(-8deg); }
+    60%      { transform: translateY(0) rotate(6deg); }
+  }
+  .cart-hop { animation: cartHop .5s cubic-bezier(.22,1,.36,1); }
+
+  /* Floating "View cart" bar slides up when it first appears */
+  @keyframes barUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: none; }
+  }
+  #floatingBar:not(.hidden) { animation: barUp .4s cubic-bezier(.22,1,.36,1); }
+
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; }
+    .reveal.is-in { animation: none; }
+    #heroSlider { transform: none !important; }
+  }
+
+  .hero-dot {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 9999px;
+    background: rgba(255,255,255,.45);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.15);
+    cursor: pointer;
+    transition: width .25s ease, background-color .25s ease;
+  }
+  .hero-dot.is-active { width: 22px; background: #fff; }
+
+  /* ── Language switcher ── */
+  .lang-trigger {
+    cursor: pointer;
+  }
+  .lang-chevron {
+    transition: transform .2s ease;
+  }
+  .lang-trigger[aria-expanded="true"] .lang-chevron {
+    transform: rotate(180deg);
+  }
+  .lang-menu {
+    animation: langMenuIn .18s cubic-bezier(.22,1,.36,1);
+    transform-origin: top right;
+  }
+  [dir="rtl"] .lang-menu { transform-origin: top left; }
+  @keyframes langMenuIn {
+    from { opacity: 0; transform: translateY(-4px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .lang-item {
+    cursor: pointer;
+  }
+</style>
+<style>
+  /* Order tracker (order system) */
+  .trk-panel { animation: trkUp .4s cubic-bezier(.22,1,.36,1) both; }
+  @media (min-width: 640px) { .trk-panel { animation: trkPop .35s cubic-bezier(.22,1,.36,1) both; } }
+  @keyframes trkUp { from { transform: translateY(100%); } to { transform: none; } }
+  @keyframes trkPop { from { opacity: 0; transform: translateY(16px) scale(.97); } to { opacity: 1; transform: none; } }
+  .trk-backdrop { animation: trkFade .25s ease-out both; }
+  @keyframes trkFade { from { opacity: 0; } to { opacity: 1; } }
+  .trk-icon { animation: trkBob 2.4s ease-in-out infinite; }
+  @keyframes trkBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  .trk-pulse { position: absolute; inset: 0; border-radius: 9999px; border: 2px solid rgba(255,255,255,.8); animation: trkRing 1.6s ease-out infinite; }
+  .trk-chip .trk-pulse { border-color: rgba(196,69,58,.9); }
+  @keyframes trkRing { from { transform: scale(.9); opacity: .9; } to { transform: scale(1.7); opacity: 0; } }
+  .trk-now { animation: trkNow 1.6s ease-in-out infinite; }
+  @keyframes trkNow { 0%, 100% { box-shadow: 0 0 0 0 rgba(196,69,58,.5); } 50% { box-shadow: 0 0 0 8px rgba(196,69,58,0); } }
+  .trk-title { animation: trkTitle .5s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes trkTitle { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .trk-ready { animation: trkGlow 1.2s ease-in-out infinite; }
+  @keyframes trkGlow { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.15); } }
+  .trk-chip { animation: trkChip .4s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes trkChip { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+  .ios-step { animation: trkTitle .45s cubic-bezier(.22,1,.36,1) both; }
+  .ios-arrow { animation: iosArrow 1.1s ease-in-out infinite; }
+  @keyframes iosArrow { 0%, 100% { transform: translateY(0); opacity: .6; } 50% { transform: translateY(6px); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .ios-step, .ios-arrow, .trk-panel, .trk-icon, .trk-pulse, .trk-now, .trk-title, .trk-ready, .trk-chip { animation: none !important; } }
+</style>
+<!-- Prebuilt Tailwind: loaded last so utilities win, like the old CDN build did. Rebuild with: npx tailwindcss@3.4.17 -c tailwind.config.js -i tailwind.input.css -o tailwind.css --minify -->
+<link rel="stylesheet" href="tailwind.css" />
+<!-- Visitor stats (GoatCounter — free, no cookies). Dashboard: https://smashedburgererbil.goatcounter.com -->
+<script data-goatcounter="https://smashedburgererbil.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+
+<body class="min-h-screen bg-base font-sans text-ink antialiased selection:bg-brand/30">
+
+<!-- ==================================================================
+     INTRO / ENTRY SCREEN
+     ================================================================== -->
+<section id="introScreen"
+  class="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-base">
+
+  <div class="absolute inset-0 overflow-hidden" aria-hidden="true">
+    <video
+      class="absolute inset-0 h-full w-full object-cover object-center"
+      autoplay muted loop playsinline preload="auto" poster="image/videoentry-poster.webp"
+    >
+      <source src="image/videoentry-web.mp4" type="video/mp4" />
+    </video>
+
+    <div class="intro-overlay absolute inset-0"></div>
+
+    <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/25"></div>
+  </div>
+
+  <div class="ambient-only-dark pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+    <div class="absolute -top-40 start-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-brand/20 blur-3xl"></div>
+    <div class="absolute bottom-0 end-0 h-80 w-80 rounded-full bg-brandDark/20 blur-3xl"></div>
+  </div>
+
+  <div class="relative z-30 flex items-center justify-end gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))]">
+    <div id="introLangSwitcher" class="relative"></div>
+
+    <button id="introThemeToggle" type="button"
+      class="grid h-10 w-10 place-items-center rounded-xl bg-surface/85 ring-1 ring-edge/10 backdrop-blur transition hover:ring-brand/40"
+      aria-label="Toggle theme">
+      <i data-lucide="moon" class="h-5 w-5"></i>
+    </button>
+  </div>
+
+  <div class="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-4 pt-6 text-center">
+
+    <div class="animate-riseIn">
+      <img
+        src="image/logodark-removebg-preview.webp"
+        alt="Smashed Burger"
+        class="h-48 w-auto max-w-[85vw] select-none drop-shadow-2xl sm:h-60 md:h-72"
+        draggable="false"
+        decoding="async"
+      />
+    </div>
+
+    <p class="wordmark-sub mt-6 text-[10px] font-semibold text-ink/80 drop-shadow sm:text-xs" data-i18n="restaurant">RESTAURANT</p>
+
+    <button id="enterMenuBtn" type="button"
+      class="mt-14 w-full max-w-sm animate-riseIn rounded-2xl bg-gradient-to-r from-brand to-brandDark px-6 py-4 text-sm font-bold text-white shadow-glow transition hover:from-brandDark hover:to-brandDeeper active:scale-[.98]"
+      style="animation-delay:.2s">
+      <span data-i18n="openMenu">Menu</span>
+    </button>
+
+    <div class="mt-8 flex animate-riseIn flex-wrap items-center justify-center gap-3" style="animation-delay:.3s">
+      <a href="https://instagram.com/smashedburgererbil" target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+         class="grid h-11 w-11 place-items-center rounded-2xl bg-surface/85 text-ink ring-1 ring-edge/10 backdrop-blur transition hover:bg-brand hover:text-white hover:ring-brand">
+        <i data-lucide="instagram" class="h-5 w-5"></i>
+      </a>
+      <a href="https://www.tiktok.com/@smashedburgererbil" target="_blank" rel="noopener noreferrer" aria-label="TikTok"
+         class="grid h-11 w-11 place-items-center rounded-2xl bg-surface/85 text-ink ring-1 ring-edge/10 backdrop-blur transition hover:bg-brand hover:text-white hover:ring-brand">
+        <i data-lucide="music-2" class="h-5 w-5"></i>
+      </a>
+      <a href="https://wa.me/9647508030803" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+         class="grid h-11 w-11 place-items-center rounded-2xl bg-surface/85 text-ink ring-1 ring-edge/10 backdrop-blur transition hover:bg-brand hover:text-white hover:ring-brand">
+        <i data-lucide="message-circle" class="h-5 w-5"></i>
+      </a>
+      <a href="https://maps.app.goo.gl/o93jBvidqUQhwje18" target="_blank" rel="noopener noreferrer" aria-label="Location"
+         class="grid h-11 w-11 place-items-center rounded-2xl bg-surface/85 text-ink ring-1 ring-edge/10 backdrop-blur transition hover:bg-brand hover:text-white hover:ring-brand">
+        <i data-lucide="map-pin" class="h-5 w-5"></i>
+      </a>
+    </div>
+  </div>
+
+  <p class="relative z-10 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 text-center text-[11px] text-ink/70 drop-shadow">
+    © <span id="yearNowIntro"></span> <span data-i18n="brand">Smashed Burger</span>
+  </p>
+</section>
+
+<!-- ==================================================================
+     APP (menu)
+     ================================================================== -->
+
+<div class="ambient-only-dark pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
+  <div class="absolute -top-40 -start-32 h-96 w-96 rounded-full bg-brand/10 blur-3xl"></div>
+  <div class="absolute top-1/3 -end-32 h-96 w-96 rounded-full bg-brandDark/10 blur-3xl"></div>
+</div>
+
+<!-- ============================== HEADER ============================== -->
+<header class="sticky top-0 z-40 border-b border-edge/5 bg-base/85 backdrop-blur-xl">
+  <div class="mx-auto max-w-6xl px-4">
+
+    <div class="flex h-16 items-center gap-2 sm:gap-3">
+      <button id="homeBtn" type="button" aria-label="Home"
+        class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface ring-1 ring-edge/5 transition hover:ring-brand/40">
+        <i data-lucide="chevron-left" class="h-5 w-5 rtl-flip"></i>
+      </button>
+
+      <div class="flex min-w-0 flex-1 items-center">
+        <img
+          src="image/lightsidelogo.webp"
+          alt="Smashed Burger"
+          class="header-logo-light h-auto max-h-11 w-auto max-w-full select-none sm:max-h-12"
+          draggable="false"
+          decoding="async"
+        />
+        <img
+          src="image/darksidelogo.webp"
+          alt="Smashed Burger"
+          class="header-logo-dark h-auto max-h-11 w-auto max-w-full select-none sm:max-h-12"
+          draggable="false"
+          decoding="async"
+        />
+      </div>
+
+      <div class="ms-auto flex shrink-0 items-center gap-2">
+        <div id="langSwitcher" class="relative"></div>
+
+        <button id="themeToggle" type="button"
+          class="grid h-10 w-10 place-items-center rounded-xl bg-surface ring-1 ring-edge/5 transition hover:ring-brand/40"
+          aria-label="Toggle theme">
+          <i data-lucide="moon" class="h-5 w-5"></i>
+        </button>
+
+        <button id="cartBtn" type="button"
+          class="relative grid h-10 w-10 place-items-center rounded-xl bg-surface ring-1 ring-edge/5 transition hover:ring-brand/40"
+          aria-label="Open cart">
+          <i data-lucide="shopping-bag" class="h-5 w-5"></i>
+          <span id="cartBadge"
+            class="tnum absolute -top-1 -end-1 hidden min-w-[20px] rounded-full bg-brand px-1.5 py-0.5 text-center text-[10px] font-bold text-white ring-2 ring-base">0</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="pb-3">
+      <div class="relative">
+        <i data-lucide="search" class="pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted start-3"></i>
+        <input id="searchInput" type="search" autocomplete="off"
+          class="w-full rounded-xl border-0 bg-surface py-2.5 text-sm text-ink ring-1 ring-edge/5 transition placeholder:text-muted focus:ring-2 focus:ring-brand/60 ps-10 pe-10"
+          placeholder="Search burgers, sides, sauces…" aria-label="Search the menu" />
+        <button id="searchClear" type="button"
+          class="absolute top-1/2 hidden h-7 w-7 -translate-y-1/2 place-items-center rounded-lg text-muted transition hover:bg-edge/5 hover:text-ink end-2"
+          aria-label="Clear search">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-edge/5 bg-base/70">
+    <div id="tabs" class="no-scrollbar mx-auto flex max-w-4xl items-start justify-between gap-1 overflow-x-auto px-4 pt-3 pb-1" role="tablist" aria-label="Menu categories"></div>
+  </div>
+</header>
+
+<!-- =============================== MAIN =============================== -->
+<main class="mx-auto max-w-6xl px-4 pb-10 pt-5">
+
+  <section class="mb-8">
+    <div class="mb-6 text-center">
+      <h1 id="menuTitle" class="font-display text-2xl sm:text-3xl">Our menu</h1>
+      <p id="menuSubtitle" class="mt-1 text-sm text-muted">Fresh, smashed, and made to order.</p>
+    </div>
+
+    <div id="heroSlider"
+         class="-mx-4 relative overflow-hidden bg-surfaceAlt"
+         dir="ltr"
+         aria-roledescription="carousel"
+         aria-label="Featured items">
+      <div id="heroTrack" class="flex"></div>
+
+      <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 to-transparent"></div>
+
+      <button id="heroPrev" type="button" aria-label="Previous slide"
+        class="absolute top-1/2 start-2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/70 active:scale-95">
+        <i data-lucide="chevron-left" class="h-4 w-4"></i>
+      </button>
+      <button id="heroNext" type="button" aria-label="Next slide"
+        class="absolute top-1/2 end-2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/70 active:scale-95">
+        <i data-lucide="chevron-right" class="h-4 w-4"></i>
+      </button>
+
+      <div id="heroDots" class="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5"></div>
+    </div>
+  </section>
+
+  <div id="grid"></div>
+
+  <div id="emptyState" class="hidden flex-col items-center justify-center rounded-2xl bg-surface/60 py-16 text-center ring-1 ring-edge/5">
+    <div class="grid h-14 w-14 place-items-center rounded-full bg-edge/5 text-muted">
+      <i data-lucide="search-x" class="h-6 w-6"></i>
+    </div>
+    <p id="emptyTitle" class="mt-4 font-display text-lg">Nothing matches that</p>
+    <p id="emptyHint" class="mt-1 text-sm text-muted">Try a different search or category.</p>
+  </div>
+
+  <section class="mt-10 overflow-hidden rounded-3xl bg-gradient-to-br from-brand via-brandDark to-brandDeeper text-white shadow-glow ring-1 ring-brand/30">
+    <div class="relative px-6 py-8 sm:px-10 sm:py-10">
+      <div class="pointer-events-none absolute -top-16 -end-10 h-48 w-48 rounded-full bg-white/10 blur-3xl"></div>
+      <div class="pointer-events-none absolute -bottom-20 -start-10 h-56 w-56 rounded-full bg-black/20 blur-3xl"></div>
+
+      <div class="relative flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-8">
+        <div class="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white/15 text-3xl ring-1 ring-white/25 backdrop-blur">
+          <span aria-hidden="true">🍔</span>
+        </div>
+
+        <div class="flex-1">
+          <h3 class="font-display text-2xl leading-tight sm:text-3xl" data-i18n="infoTitle">
+            Smashed. Crispy. Golden.
+          </h3>
+          <p class="mt-2 max-w-xl text-sm leading-relaxed text-white/85" data-i18n="infoText">
+            Thanks for stopping by. Every burger is pressed fresh the moment you order it — hot, juicy, and stacked with that golden crunch.
+          </p>
+        </div>
+
+        <div class="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
+          <a href="tel:+9647508030803"
+             class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-white/15 px-4 py-3 text-xs font-bold text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25 sm:flex-none">
+            <i data-lucide="phone-call" class="h-4 w-4"></i>
+            <span data-i18n="callCta">Call</span>
+          </a>
+          <a href="https://wa.me/9647508030803" target="_blank" rel="noopener noreferrer"
+             class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-white/15 px-4 py-3 text-xs font-bold text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25 sm:flex-none">
+            <i data-lucide="message-circle" class="h-4 w-4"></i>
+            <span data-i18n="chatCta">Chat</span>
+          </a>
+          <a href="https://maps.app.goo.gl/o93jBvidqUQhwje18" target="_blank" rel="noopener noreferrer"
+             class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-white/15 px-4 py-3 text-xs font-bold text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25 sm:flex-none">
+            <i data-lucide="navigation" class="h-4 w-4"></i>
+            <span data-i18n="directionsCta">Directions</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============================== FOOTER ============================== -->
+<footer class="mt-6 border-t border-edge/5 bg-surface">
+  <div class="mx-auto max-w-6xl px-4 pt-10 pb-[max(8rem,env(safe-area-inset-bottom))]">
+
+    <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+
+      <div>
+        <div class="flex items-center gap-2.5">
+          <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand to-brandDark text-lg shadow-glow">
+            <span aria-hidden="true">🍔</span>
+          </div>
+          <div class="min-w-0">
+            <p class="truncate font-display text-lg font-black uppercase leading-none tracking-tight text-ink" data-i18n="brand">Smashed Burger</p>
+            <p class="truncate text-[11px] text-muted" data-i18n="tagline">Burgers &amp; More</p>
+          </div>
+        </div>
+
+        <p class="mt-4 max-w-xs text-xs leading-relaxed text-muted" data-i18n="footerTagline">
+          Smashed. Crispy. Golden. Made fresh to order, every single time.
+        </p>
+
+        <div class="mt-5 flex flex-wrap items-center gap-3">
+          <a href="https://instagram.com/smashedburgererbil" target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+             class="grid h-10 w-10 place-items-center rounded-2xl bg-surfaceAlt text-ink ring-1 ring-edge/5 transition hover:bg-brand hover:text-white hover:ring-brand">
+            <i data-lucide="instagram" class="h-4 w-4"></i>
+          </a>
+          <a href="https://www.tiktok.com/@smashedburgererbil" target="_blank" rel="noopener noreferrer" aria-label="TikTok"
+             class="grid h-10 w-10 place-items-center rounded-2xl bg-surfaceAlt text-ink ring-1 ring-edge/5 transition hover:bg-brand hover:text-white hover:ring-brand">
+            <i data-lucide="music-2" class="h-4 w-4"></i>
+          </a>
+          <a href="https://wa.me/9647508030803" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+             class="grid h-10 w-10 place-items-center rounded-2xl bg-surfaceAlt text-ink ring-1 ring-edge/5 transition hover:bg-brand hover:text-white hover:ring-brand">
+            <i data-lucide="message-circle" class="h-4 w-4"></i>
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-muted" data-i18n="contactTitle">Contact</h3>
+
+        <address class="mt-4 space-y-3 text-sm not-italic">
+          <a href="https://maps.app.goo.gl/o93jBvidqUQhwje18" target="_blank" rel="noopener noreferrer"
+             class="flex items-start gap-2.5 text-ink transition hover:text-brand">
+            <i data-lucide="map-pin" class="mt-0.5 h-4 w-4 shrink-0 text-brand"></i>
+            <span class="leading-snug">
+              <span class="block" data-i18n="addressLine1">Gulan Street, The Boulevard</span>
+              <span class="block text-muted" data-i18n="addressLine2">Erbil, Erbil Governorate, 44001, Iraq</span>
+            </span>
+          </a>
+
+          <a href="tel:+9647508030803"
+             class="flex items-center gap-2.5 text-ink transition hover:text-brand">
+            <i data-lucide="phone" class="h-4 w-4 shrink-0 text-brand"></i>
+            <span class="tnum" dir="ltr">+964 750 803 0803</span>
+          </a>
+        </address>
+      </div>
+
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand via-brandDark to-brandDeeper p-5 text-white shadow-glow ring-1 ring-brand/30">
+        <div class="pointer-events-none absolute -top-12 -end-8 h-36 w-36 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-14 -start-8 h-40 w-40 rounded-full bg-black/20 blur-3xl"></div>
+
+        <div class="relative">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-white/80" data-i18n="openingHours">Opening Hours</h3>
+
+          <p class="mt-4 flex items-center gap-2 text-sm text-white">
+            <i data-lucide="calendar-check" class="h-4 w-4 shrink-0 text-white"></i>
+            <span data-i18n="openDaily">Open Daily</span>
+          </p>
+          <p class="mt-1 flex items-center gap-2 text-sm text-white">
+            <i data-lucide="clock" class="h-4 w-4 shrink-0 text-white"></i>
+            <span class="tnum" dir="ltr">11:30 AM – 12:00 AM</span>
+          </p>
+
+          <details class="group mt-4 overflow-hidden rounded-2xl bg-white/[.12] ring-1 ring-white/25 backdrop-blur">
+            <summary class="footer-summary flex items-center justify-between gap-3 px-4 py-3.5">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <i data-lucide="clock" class="h-4 w-4 shrink-0 text-white"></i>
+                <span class="truncate text-sm font-semibold text-white" data-i18n="weeklySchedule">Weekly schedule</span>
+                <span id="openNowBadge"
+                      class="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/40">
+                  <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                  <span id="openNowLabel">Open Now</span>
+                </span>
+              </div>
+              <i data-lucide="chevron-down" class="footer-chevron h-4 w-4 shrink-0 text-white/80"></i>
+            </summary>
+
+            <div class="border-t border-white/20 px-4 pb-3">
+              <ul id="hoursList" class="divide-y divide-white/15 text-sm text-white"></ul>
+              <p class="mt-3 text-[11px] text-white/75" data-i18n="hoursNote">
+                Times shown in Baghdad local time.
+              </p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-10 flex flex-col items-center justify-between gap-3 border-t border-edge/5 pt-6 text-[11px] text-muted sm:flex-row">
+      <p>© <span id="yearNow"></span> <span data-i18n="brand">Smashed Burger</span>. <span data-i18n="rights">All rights reserved.</span></p>
+      <p class="flex items-center gap-1.5">
+        <span data-i18n="poweredBy">Powered by</span>
+        <span class="font-semibold text-ink">Smashed Burger Digital</span>
+      </p>
+    </div>
+  </div>
+</footer>
+
+<!-- ========================= FLOATING ORDER BAR ======================== -->
+<div id="floatingBar" class="fixed inset-x-0 bottom-0 z-30 hidden px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+  <button id="floatingBtn" type="button"
+    class="mx-auto flex w-full max-w-md items-center gap-3 rounded-2xl bg-gradient-to-r from-brand to-brandDark px-4 py-3.5 text-white shadow-glow transition active:scale-[.98]">
+    <span class="relative grid h-9 w-9 place-items-center rounded-xl bg-black/25">
+      <i data-lucide="shopping-bag" class="h-[18px] w-[18px]"></i>
+      <span id="floatingCount" class="tnum absolute -top-1.5 -end-1.5 rounded-full bg-black px-1.5 text-[10px] font-bold text-white">0</span>
+    </span>
+    <span id="floatingLabel" class="flex-1 text-start text-sm font-bold">View cart</span>
+    <span id="floatingTotal" class="tnum text-sm font-extrabold">0 IQD</span>
+    <i data-lucide="arrow-right" class="h-4 w-4 rtl-flip"></i>
+  </button>
+</div>
+
+<!-- ============================ CART DRAWER =========================== -->
+<div id="drawerRoot" class="fixed inset-0 z-50 hidden">
+  <div id="drawerBackdrop" class="absolute inset-0 animate-fadeIn bg-black/70 backdrop-blur-sm"></div>
+  <aside id="drawer" class="drawer absolute inset-y-0 end-0 flex w-full max-w-md flex-col bg-surface shadow-2xl ring-1 ring-edge/10"
+    role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+    <header class="flex shrink-0 items-center gap-3 border-b border-edge/5 px-4 py-4">
+      <i data-lucide="shopping-bag" class="h-5 w-5 text-brand"></i>
+      <h2 id="drawerTitle" class="font-display text-lg">Your order</h2>
+      <button id="clearCartBtn" type="button"
+        class="ms-auto rounded-lg px-2.5 py-1.5 text-xs font-semibold text-muted transition hover:bg-edge/5 hover:text-hot">Clear</button>
+      <button id="closeDrawerBtn" type="button"
+        class="grid h-9 w-9 place-items-center rounded-lg text-muted transition hover:bg-edge/5 hover:text-ink" aria-label="Close cart">
+        <i data-lucide="x" class="h-5 w-5"></i>
+      </button>
+    </header>
+    <div id="drawerBody" class="flex-1 overflow-y-auto overscroll-contain px-4 py-4"></div>
+    <footer id="drawerFooter" class="shrink-0 border-t border-edge/5 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4"></footer>
+  </aside>
+</div>
+
+<!-- ======================== ITEM CUSTOMIZATION MODAL =================== -->
+<div id="modalRoot" class="fixed inset-0 z-50 hidden">
+  <div id="modalBackdrop" class="absolute inset-0 animate-fadeIn bg-black/75 backdrop-blur-sm"></div>
+  <div class="absolute inset-0 flex items-end justify-center sm:items-center sm:p-4">
+    <div id="modalPanel" class="modal-panel flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-surface ring-1 ring-edge/10 sm:max-w-lg sm:rounded-3xl"
+      role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1"></div>
+  </div>
+</div>
+
+<!-- =============================== TOAST ============================== -->
+<div id="toast" role="status" aria-live="polite"
+  class="pointer-events-none fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 translate-y-3 rounded-xl bg-zinc-900/95 px-4 py-2.5 text-sm font-medium text-white opacity-0 ring-1 ring-white/10 shadow-card transition-all duration-200"></div>
+
+<script>
+'use strict';
+
+/* ====================================================================
+ * §1 — DOMAIN DATA
+ * ==================================================================== */
+
+const MODIFIER_SETS = {
+  burger: [
+    { id: 'spice', type: 'single', labelKey: 'spiceLevel', defaultOptionId: 'medium', options: [
+      { id: 'mild',   label: { en: 'Mild',        ar: 'خفيف',       ku: 'کەم تیژ' },         price: 0 },
+      { id: 'medium', label: { en: 'Medium',      ar: 'متوسط',      ku: 'مامناوەند' },    price: 0 },
+      { id: 'hot',    label: { en: 'Hot',         ar: 'حار',        ku: 'تیژ' },          price: 0 },
+      { id: 'xhot',   label: { en: 'Extra Hot',   ar: 'حار جداً',   ku: 'زۆر تیژ' },      price: 0 },
+    ]},
+    { id: 'addons', type: 'multi', labelKey: 'addons', options: [
+      { id: 'cheese', label: { en: 'Extra Cheese', ar: 'جبنة إضافية', ku: 'پەنیری زیادە' }, price: 1000 },
+      { id: 'patty',  label: { en: 'Extra Patty',  ar: 'قطعة لحم إضافية', ku: 'گۆشتی زیادە' },  price: 3000 },
+      { id: 'sauce',  label: { en: 'Extra Sauce',  ar: 'صوص إضافي',  ku: 'سۆسی زیادە' },   price: 500  },
+    ]},
+    { id: 'removals', type: 'multi', labelKey: 'remove', options: [
+      { id: 'no-lettuce', label: { en: 'No Lettuce', ar: 'بدون خس',    ku: 'بێ کاهوو' },     price: 0 },
+      { id: 'no-tomato',  label: { en: 'No Tomato',  ar: 'بدون طماطم', ku: 'بێ تەماتە' },    price: 0 },
+      { id: 'no-onion',   label: { en: 'No Onion',   ar: 'بدون بصل',   ku: 'بێ پیاز' },      price: 0 },
+      { id: 'no-pickles', label: { en: 'No Pickles', ar: 'بدون مخلل',  ku: 'بێ خەیارشۆر' },  price: 0 },
+    ]},
+  ],
+  side: [
+    { id: 'addons', type: 'multi', labelKey: 'addons', options: [
+      { id: 'cheese',    label: { en: 'Extra Cheese',    ar: 'جبنة إضافية',       ku: 'پەنیری زیادە' },       price: 1000 },
+      { id: 'sauce',     label: { en: 'Extra Sauce',     ar: 'صوص إضافي',         ku: 'سۆسی زیادە' },         price: 500  },
+      { id: 'spice-mix', label: { en: 'Extra Spice Mix', ar: 'بهارات إضافية', ku: 'بەهاراتی زیادە' }, price: 250  },
+    ]},
+  ],
+  drink: [
+    { id: 'ice', type: 'single', labelKey: 'ice', defaultOptionId: 'normal', options: [
+      { id: 'normal', label: { en: 'Normal Ice', ar: 'ثلج عادي', ku: 'سەهۆڵی ئاسایی' }, price: 0 },
+      { id: 'less',   label: { en: 'Less Ice',   ar: 'ثلج قليل', ku: 'سەهۆڵی کەم' },    price: 0 },
+      { id: 'none',   label: { en: 'No Ice',     ar: 'بدون ثلج', ku: 'بێ سەهۆڵ' },      price: 0 },
+    ]},
+  ],
+  none: [],
+};
+
+const MENU = [
+  { id:'og-smash-burger', category:'burgers',
+    name:{en:'OG Smash Burger', ar:'أو جي سماش برجر', ku:'ئۆ جی سماش بەرگەر'},
+    desc:{en:'The original double smash with cheese, pickles, onion & house sauce', ar:'سماش برجر الأصلي بقطعتي لحم مع الجبنة والمخلل والبصل وصوص الهاوس', ku:'بەرگەری ڕەسەنی دوو قات لەگەڵ پەنیر، خەیارشۆر، پیاز و سۆسی هاوس'},
+    price:8500, emoji:'🍔', gradient:'from-brand/40 to-zinc-900/30',
+    image:'image/Ogsmashburger.webp',
+    tags:['chef'], modifierSet:'burger', available:true },
+
+  { id:'all-american-burger', category:'burgers',
+    name:{en:'All American Burger', ar:'أول أمريكان برجر', ku:'ئۆڵ ئەمریکان بەرگەر'},
+    desc:{en:'Classic beef smash with cheddar, lettuce, tomato & American sauce', ar:'سماش لحم كلاسيكي مع جبنة الشيدر والخس والطماطم والصوص الأمريكي', ku:'بەرگەری گۆشتی کلاسیک لەگەڵ پەنیری چێدار، کاهوو، تەماتە و سۆسی ئەمریکی'},
+    price:8500, emoji:'🇺🇸', gradient:'from-brandDark/40 to-zinc-900/25',
+    image:'image/allamericanburger.webp',
+    tags:[], modifierSet:'burger', available:true },
+
+  { id:'jalapeno-burger', category:'burgers',
+    name:{en:'Jalapeño Burger', ar:'برجر هالابينو', ku:'بەرگەری هالاپینۆ'},
+    desc:{en:'Smash patty loaded with jalapeños, pepper jack & spicy mayo', ar:'قطعة لحم سماش مع الهالابينو وجبنة بيبر جاك ومايونيز حار', ku:'گۆشتی سماشکراو لەگەڵ هالاپینۆ، پەنیری پێپەر جاک و مایۆنێزی تیژ'},
+    price:8500, emoji:'🌶️', gradient:'from-brandDeeper/40 to-zinc-900/25',
+    image:'image/jalapenoburger.webp',
+    tags:['spicy','chef'], modifierSet:'burger', available:true },
+
+  { id:'golden-crunch-chicken-burger', category:'burgers',
+    name:{en:'Golden Crunch Chicken Burger', ar:'برجر الدجاج المقرمش الذهبي', ku:'بەرگەری مریشکی کرانچی زێڕین'},
+    desc:{en:'Crispy chicken fillet with signature Golden Crunch sauce & pickles', ar:'فيليه دجاج مقرمش مع صوص القرمشة الذهبية الخاص والمخلل', ku:'فیلێی مریشکی کرسپی لەگەڵ سۆسی تایبەتی کرانچی زێڕین و خەیارشۆر'},
+    price:7500, emoji:'🍔', gradient:'from-brand/35 to-zinc-800/20',
+    image:'image/Goldencrunchchickenburger.webp',
+    tags:['chef','new'], modifierSet:'burger', available:true },
+
+  { id:'hot-chicken-burger', category:'burgers',
+    name:{en:'Hot Chicken Burger', ar:'برجر الدجاج الحار', ku:'بەرگەری مریشکی تیژ'},
+    desc:{en:'Crispy chicken, lettuce, cheese, tomato with hot spice blend', ar:'دجاج مقرمش مع الخس والجبنة والطماطم وخلطة بهارات حارّة', ku:'مریشکی کرسپی، کاهوو، پەنیر و تەماتە لەگەڵ تێکەڵەی بەهاراتی تیژ'},
+    price:7500, emoji:'🔥', gradient:'from-brand/35 to-zinc-900/25',
+    image:'image/Hotchickenburger.webp',
+    tags:['spicy'], modifierSet:'burger', available:true },
+
+  { id:'sweet-heat-chicken-burger', category:'burgers',
+    name:{en:'Sweet Heat Chicken Burger', ar:'برجر الدجاج الحلو والحار', ku:'بەرگەری مریشکی شیرین و تیژ'},
+    desc:{en:'Crispy chicken glazed in sweet-heat sauce with lettuce, cheese & tomato', ar:'دجاج مقرمش مغطّى بصوص حلو وحار مع الخس والجبنة والطماطم', ku:'مریشکی کرسپی بە سۆسی شیرین و تیژ، لەگەڵ کاهوو، پەنیر و تەماتە'},
+    price:7500, emoji:'🍔', gradient:'from-brandDark/35 to-zinc-800/20',
+    image:'image/Sweetheatchickenburger.webp',
+    tags:['new'], modifierSet:'burger', available:true },
+
+  { id:'crispy-chicken-tenders', category:'sides',
+    name:{en:'Crispy Chicken Tenders', ar:'أصابع الدجاج المقرمشة', ku:'تێندەری مریشکی کرسپی'},
+    desc:{en:'Crispy tenders with special spice', ar:'قطع دجاج مقرمشة بتوابل خاصة', ku:'پارچە مریشکی کرسپی بە بەهاراتی تایبەت'},
+    price:8000, emoji:'🍗', gradient:'from-zinc-500/30 to-zinc-800/20',
+    image:'image/Crispychickentenders.webp',
+    tags:['chef'], modifierSet:'side', available:true },
+
+  { id:'dynamite-shrimp', category:'sides',
+    name:{en:'Dynamite Shrimps', ar:'روبيان ديناميت', ku:'میگووی داینامایت'},
+    desc:{en:'Dynamite shrimp with special sauce', ar:'روبيان ديناميت مع صوص خاص', ku:'میگووی داینامایت لەگەڵ سۆسی تایبەت'},
+    price:9500, emoji:'🍤', gradient:'from-brand/30 to-zinc-900/20',
+    image:'image/Dynamiteshrimps.webp',
+    tags:['spicy','chef'], modifierSet:'side', available:true },
+
+  { id:'jalapeno-poppers', category:'sides',
+    name:{en:'Jalapeño Poppers', ar:'هالابينو محشي بالجبنة', ku:'هالاپینۆ پۆپەرز'},
+    desc:{en:'Crispy jalapeño poppers with a cheese filling', ar:'فلفل هالابينو مقرمش محشي بالجبنة', ku:'هالاپینۆی کرسپی پڕکراو بە پەنیر'},
+    price:6500, emoji:'🌶️', gradient:'from-zinc-400/25 to-zinc-800/15',
+    image:'image/jalapenopoppers.webp',
+    tags:['spicy'], modifierSet:'side', available:true },
+
+  { id:'chicken-popcorn', category:'sides',
+    name:{en:'Chicken Popcorn', ar:'بوب كورن دجاج', ku:'پۆپکۆرنی مریشک'},
+    desc:{en:'Chicken popcorn with spice', ar:'قطع دجاج صغيرة متبلة', ku:'پارچە بچووکی مریشکی کرسپی بە بەهارات'},
+    price:5500, emoji:'🍿', gradient:'from-zinc-500/25 to-zinc-700/15',
+    image:'image/chickenpopcorn.webp',
+    tags:[], modifierSet:'side', available:true },
+
+  { id:'loaded-fries', category:'sides',
+    name:{en:'Loaded Fries', ar:'بطاطا لودد', ku:'پەتاتەی لۆدید'},
+    desc:{en:'Loaded fries with salt and pepper', ar:'بطاطا مقلية بالملح والفلفل', ku:'پەتاتەی سوورکراو لەگەڵ خوێ و بیبەر'},
+    price:7000, emoji:'🍟', gradient:'from-brandDark/30 to-zinc-900/20',
+    image:'image/loadedfries.webp',
+    tags:['chef'], modifierSet:'side', available:true },
+
+  { id:'classic-fries', category:'sides',
+    name:{en:'Classic Fries', ar:'بطاطا مقلية كلاسيكية', ku:'پەتاتەی سوورکراوی کلاسیک'},
+    desc:{en:'1 Plate', ar:'طبق واحد', ku:'یەک قاپ'},
+    price:3000, emoji:'🥔', gradient:'from-zinc-400/20 to-zinc-700/15',
+    image:'image/classicfries.webp',
+    tags:[], modifierSet:'side', available:true },
+
+  { id:'curly-fries', category:'sides',
+    name:{en:'Curly Fries', ar:'بطاطا حلزونية', ku:'پەتاتەی کێرلی'},
+    desc:{en:'1 Plate', ar:'طبق واحد', ku:'یەک قاپ'},
+    price:3500, emoji:'🍟', gradient:'from-brand/25 to-zinc-800/15',
+    image:'image/curlyfries.webp',
+    tags:[], modifierSet:'side', available:true },
+
+  { id:'spicy-sauce', category:'sauces',
+    name:{en:'Spicy Sauce', ar:'صوص حار', ku:'سۆسی تیژ'},
+    desc:{en:'Per cup', ar:'لكل كوب', ku:'بۆ هەر کوپێک'},
+    price:1500, emoji:'🌶️', gradient:'from-brandDeeper/35 to-zinc-900/25',
+    image:'image/Spicy.webp',
+    tags:['spicy'], modifierSet:'none', available:true },
+
+  { id:'dynamite-sauce', category:'sauces',
+    name:{en:'Dynamite Sauce', ar:'صوص ديناميت', ku:'سۆسی داینامایت'},
+    desc:{en:'Per cup', ar:'لكل كوب', ku:'بۆ هەر کوپێک'},
+    price:1500, emoji:'🥫', gradient:'from-brand/30 to-zinc-800/20',
+    image:'image/dynamite.webp',
+    tags:['spicy'], modifierSet:'none', available:true },
+
+  { id:'house-sauce', category:'sauces',
+    name:{en:'House Sauce', ar:'صوص الهاوس', ku:'سۆسی هاوس'},
+    desc:{en:'Per cup', ar:'لكل كوب', ku:'بۆ هەر کوپێک'},
+    price:1500, emoji:'🥫', gradient:'from-zinc-500/25 to-zinc-800/15',
+    image:'image/House.webp',
+    tags:[], modifierSet:'none', available:true },
+
+  { id:'golden-crunch-sauce', category:'sauces',
+    name:{en:'Golden Crunch Sauce', ar:'صوص القرمشة الذهبية', ku:'سۆسی کرانچی زێڕین'},
+    desc:{en:'Signature sauce · per cup', ar:'صوصنا الخاص · لكل كوب', ku:'سۆسی تایبەت · بۆ هەر کوپێک'},
+    price:1500, emoji:'✨', gradient:'from-brand/30 to-zinc-800/15',
+    image:'image/goldencrunch.webp',
+    tags:['chef'], modifierSet:'none', available:true },
+
+  { id:'bbq-sauce', category:'sauces',
+    name:{en:'BBQ Sauce', ar:'صوص باربيكيو', ku:'سۆسی باربیکیو'},
+    desc:{en:'Per cup', ar:'لكل كوب', ku:'بۆ هەر کوپێک'},
+    price:1500, emoji:'🥫', gradient:'from-brandDeeper/30 to-zinc-900/20',
+    image:'image/BBQ.webp',
+    tags:[], modifierSet:'none', available:true },
+
+  { id:'honey-mustard', category:'sauces',
+    name:{en:'Honey Mustard', ar:'صوص العسل والخردل', ku:'سۆسی هەنگوین و خەردەل'},
+    desc:{en:'Per cup', ar:'لكل كوب', ku:'بۆ هەر کوپێک'},
+    price:1500, emoji:'🍯', gradient:'from-zinc-400/25 to-zinc-700/15',
+    image:'image/honeymustard.webp',
+    tags:[], modifierSet:'none', available:true },
+
+  { id:'mayonnaise', category:'sauces',
+    name:{en:'Mayonnaise', ar:'مايونيز', ku:'مایۆنێز'},
+    desc:{en:'Per cup', ar:'لكل كوب', ku:'بۆ هەر کوپێک'},
+    price:1000, emoji:'🥚', gradient:'from-zinc-300/20 to-zinc-600/10',
+    image:'image/mayonnaise.webp',
+    tags:[], modifierSet:'none', available:true },
+
+  { id:'hot-honey-ranch', category:'sauces',
+    name:{en:'Hot Honey Ranch', ar:'صوص رانش بالعسل الحار', ku:'سۆسی ڕانچی هەنگوینی تیژ'},
+    desc:{en:'Per cup', ar:'لكل كوب', ku:'بۆ هەر کوپێک'},
+    price:1500, emoji:'🔥', gradient:'from-brand/30 to-zinc-900/20',
+    image:'image/hothoney.webp',
+    tags:['spicy','new'], modifierSet:'none', available:true },
+
+  { id:'pepsi', category:'drinks',
+    name:{en:'Pepsi', ar:'بيبسي', ku:'پێپسی'},
+    desc:{en:'Chilled can', ar:'علبة باردة', ku:'قوتووی سارد'},
+    price:1500, emoji:'🥤', gradient:'from-zinc-500/25 to-zinc-800/15',
+    image:'image/pepsi.webp',
+    tags:[], modifierSet:'drink', available:true },
+
+  { id:'diet-pepsi', category:'drinks',
+    name:{en:'Diet Pepsi', ar:'بيبسي دايت', ku:'پێپسی دایت'},
+    desc:{en:'Chilled can', ar:'علبة باردة', ku:'قوتووی سارد'},
+    price:1500, emoji:'🥤', gradient:'from-zinc-400/20 to-zinc-700/15',
+    image:'image/dietpepsi.webp',
+    tags:[], modifierSet:'drink', available:true },
+
+  { id:'mirinda-orange', category:'drinks',
+    name:{en:'Mirinda Orange', ar:'ميرندا برتقال', ku:'میرندا پرتەقاڵ'},
+    desc:{en:'Chilled can', ar:'علبة باردة', ku:'قوتووی سارد'},
+    price:1500, emoji:'🍊', gradient:'from-brand/25 to-zinc-800/15',
+    image:'image/mirandaorange.webp',
+    tags:[], modifierSet:'drink', available:true },
+
+  { id:'seven-up', category:'drinks',
+    name:{en:'7 Up', ar:'سفن أب', ku:'سێڤن ئەپ'},
+    desc:{en:'Chilled can', ar:'علبة باردة', ku:'قوتووی سارد'},
+    price:1500, emoji:'🥤', gradient:'from-zinc-500/20 to-zinc-700/10',
+    image:'image/7up.webp',
+    tags:[], modifierSet:'drink', available:true },
+];
+
+const CATEGORIES = [
+  { id:'all',     labelKey:'catAll',     icon:'layout-grid' },
+  { id:'burgers', labelKey:'catBurgers', icon:'beef'        },
+  { id:'sides',   labelKey:'catSides',   icon:'utensils'    },
+  { id:'sauces',  labelKey:'catSauces',  icon:'droplet'     },
+  { id:'drinks',  labelKey:'catDrinks',  icon:'cup-soda'    },
+];
+
+const GRID_SECTIONS = [
+  { id:'burgers', labelKey:'catBurgers' },
+  { id:'sides',   labelKey:'catSides'   },
+  { id:'sauces',  labelKey:'catSauces'  },
+  { id:'drinks',  labelKey:'catDrinks'  },
+];
+
+const TAG_STYLES = {
+  spicy: { emoji:'🔥', labelKey:'tagSpicy', cls:'bg-brand/30 text-white ring-brand/50' },
+  chef:  { emoji:'⭐', labelKey:'tagChef',  cls:'bg-white/20 text-white ring-white/30' },
+  vegan: { emoji:'🌱', labelKey:'tagVegan', cls:'bg-emerald-500/30 text-white ring-emerald-500/40' },
+  new:   { emoji:'✨', labelKey:'tagNew',   cls:'bg-zinc-800/70 text-white ring-white/20' },
+};
+
+const DAY_NAMES = {
+  en: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+  ar: ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'],
+  ku: ['یەکشەممە','دووشەممە','سێشەممە','چوارشەممە','پێنجشەممە','هەینی','شەممە'],
+};
+
+const MAX_QTY = 99;
+const STORAGE_KEY = 'smashed-burger.menu.v3';
+
+const STORE_TZ = 'Asia/Baghdad';
+const OPEN_MINUTES_OF_DAY  = 11 * 60 + 30;
+const CLOSE_MINUTES_OF_DAY = 24 * 60;
+
+const STORE = {
+  phone:     '+9647508030803',
+  whatsapp:  'https://wa.me/9647508030803',
+  // Where "Send order on WhatsApp" goes (the cashier's WhatsApp)
+  orderWhatsapp: 'https://wa.me/9647508030803',
+  maps:      'https://maps.app.goo.gl/o93jBvidqUQhwje18',
+  tiktok:    'https://www.tiktok.com/@smashedburgererbil',
+  instagram: 'https://instagram.com/smashedburgererbil',
+};
+
+const HERO_SLIDES = [
+  { src: 'image/slide1.webp', alt: 'Smashed Burger' },
+  { src: 'image/slide2.webp', alt: 'Smashed Burger' },
+  { src: 'image/slide3.webp', alt: 'Smashed Burger' },
+  { src: 'image/slide4.webp', alt: 'Smashed Burger' },
+  { src: 'image/slide5.webp', alt: 'Smashed Burger' },
+];
+const HERO_INTERVAL_MS = 5000;
+
+/* ====================================================================
+ * §2 — i18n DICTIONARY
+ * ==================================================================== */
+
+const I18N = {
+  en: {
+    htmlLang:'en', dir:'ltr', shortLabel:'EN', nativeName:'English',
+    brand:'Smashed Burger', tagline:'Burgers & More', restaurant:'RESTAURANT',
+    searchPlaceholder:'Search burgers, sides, sauces…', clearSearch:'Clear search',
+    catAll:'All', catBurgers:'Burgers', catSides:'Sides', catSauces:'Sauces', catDrinks:'Drinks',
+    customize:'Customize', addToCart:'Add', addToCartWithPrice:'Add to cart',
+    tagSpicy:'Spicy', tagChef:"Chef's Choice", tagVegan:'Vegan', tagNew:'New',
+    noResults:'Nothing matches that', noResultsHint:'Try a different search or category.',
+    spiceLevel:'Spice level', addons:'Add-ons', remove:'Remove', ice:'Ice', required:'Required',
+    quantity:'Quantity', cartTitle:'Your order',
+    cartEmpty:'Your cart is empty', cartEmptyHint:'Add something delicious from the menu.',
+    browseMenu:'Browse menu', clearCart:'Clear', checkout:'Checkout',
+    subtotal:'Subtotal', total:'Total',
+    deliveryNote:'Delivery & taxes calculated at checkout.',
+    viewCart:'View cart',
+    openMenu:'Menu',
+    addedToast:'Added to cart', clearedToast:'Cart cleared', removedToast:'Removed from cart',
+    checkoutToast:'Checkout ships with the production build (Track B).',
+    menuTitle:'Our menu', menuSubtitle:'Fresh, smashed, and made to order.',
+    decrease:'Decrease quantity', increase:'Increase quantity', removeLine:'Remove item',
+    themeToDark:'Switch to dark mode', themeToLight:'Switch to light mode',
+    footerTagline:'Smashed. Crispy. Golden. Made fresh to order, every single time.',
+    infoTitle:'Smashed. Crispy. Golden.',
+    infoText:'Thanks for stopping by. Every burger is pressed fresh the moment you order it — hot, juicy, and stacked with that golden crunch.',
+    contactTitle:'Contact',
+    openingHours:'Opening Hours',
+    weeklySchedule:'Weekly schedule',
+    openNow:'Open Now',
+    closedNow:'Closed',
+    openDaily:'Open Daily',
+    hoursNote:'Times shown in Baghdad local time.',
+    addressLine1:'Gulan Street, The Boulevard',
+    addressLine2:'Erbil, Erbil Governorate, 44001, Iraq',
+    whatsappCta:'WhatsApp',
+    callCta:'Call',
+    chatCta:'Chat',
+    directionsCta:'Directions',
+    rights:'All rights reserved.',
+    poweredBy:'Powered by',
+    orderType:'Order type', dineIn:'Dine in', takeaway:'Takeaway', tableNumber:'Table number', tablePlaceholder:'e.g. 5', tableRequired:'Please enter your table number', sendOrder:'Send order on WhatsApp', sentToast:'Your order is ready in WhatsApp — tap Send', orderNote:'Your order goes straight to the cashier on WhatsApp.',
+  },
+  ar: {
+    htmlLang:'ar', dir:'rtl', shortLabel:'ع', nativeName:'العربية',
+    brand:'سماشد برجر', tagline:'برجر وأكثر', restaurant:'مطعم',
+    searchPlaceholder:'ابحث عن برجر، مقبلات، صوصات…', clearSearch:'مسح البحث',
+    catAll:'الكل', catBurgers:'البرجر', catSides:'المقبلات', catSauces:'الصوصات', catDrinks:'المشروبات',
+    customize:'تخصيص', addToCart:'إضافة', addToCartWithPrice:'أضف إلى السلة',
+    tagSpicy:'حار', tagChef:'اختيار الشيف', tagVegan:'نباتي', tagNew:'جديد',
+    noResults:'لا توجد نتائج مطابقة', noResultsHint:'جرّب بحثاً أو تصنيفاً آخر.',
+    spiceLevel:'درجة الحار', addons:'إضافات', remove:'إزالة', ice:'الثلج', required:'مطلوب',
+    quantity:'الكمية', cartTitle:'طلبك',
+    cartEmpty:'سلتك فارغة', cartEmptyHint:'أضف شيئاً لذيذاً من القائمة.',
+    browseMenu:'تصفح القائمة', clearCart:'مسح', checkout:'إتمام الطلب',
+    subtotal:'المجموع الفرعي', total:'الإجمالي',
+    deliveryNote:'تُحسب رسوم التوصيل والضرائب عند إتمام الطلب.',
+    viewCart:'عرض السلة',
+    openMenu:'القائمة',
+    addedToast:'تمت الإضافة إلى السلة', clearedToast:'تم مسح السلة', removedToast:'تمت الإزالة من السلة',
+    checkoutToast:'إتمام الطلب سيكون متاحاً قريباً.',
+    menuTitle:'قائمتنا', menuSubtitle:'برجر سماش طازج، يُحضّر عند الطلب.',
+    decrease:'تقليل الكمية', increase:'زيادة الكمية', removeLine:'إزالة العنصر',
+    themeToDark:'التبديل إلى الوضع الداكن', themeToLight:'التبديل إلى الوضع الفاتح',
+    footerTagline:'سماش. مقرمش. ذهبي. يُحضّر طازجاً عند الطلب، في كل مرة.',
+    infoTitle:'سماش. مقرمش. ذهبي.',
+    infoText:'شكراً لزيارتكم. كل برجر يُضغط طازجاً على الصاج لحظة طلبه — ساخن، مليء بالعصارة، ومع تلك القرمشة الذهبية.',
+    contactTitle:'تواصل معنا',
+    openingHours:'ساعات العمل',
+    weeklySchedule:'الجدول الأسبوعي',
+    openNow:'مفتوح الآن',
+    closedNow:'مغلق',
+    openDaily:'مفتوح يومياً',
+    hoursNote:'الأوقات حسب توقيت بغداد.',
+    addressLine1:'شارع كولان، البوليفارد',
+    addressLine2:'أربيل، محافظة أربيل، 44001، العراق',
+    whatsappCta:'واتساب',
+    callCta:'اتصال',
+    chatCta:'محادثة',
+    directionsCta:'الموقع',
+    rights:'جميع الحقوق محفوظة.',
+    poweredBy:'تصميم',
+    orderType:'نوع الطلب', dineIn:'داخل المطعم', takeaway:'سفري', tableNumber:'رقم الطاولة', tablePlaceholder:'مثال: 5', tableRequired:'يرجى إدخال رقم الطاولة', sendOrder:'إرسال الطلب عبر واتساب', sentToast:'طلبك جاهز في واتساب — اضغط إرسال', orderNote:'يُرسل طلبك مباشرة إلى الكاشير عبر واتساب.',
+  },
+  ku: {
+    htmlLang:'ckb', dir:'rtl', shortLabel:'ک', nativeName:'کوردی',
+    brand:'سماشد بەرگەر', tagline:'بەرگەر و زیاتر', restaurant:'چێشتخانە',
+    searchPlaceholder:'گەڕان بۆ بەرگەر، لاوەکی، سۆس…', clearSearch:'سڕینەوەی گەڕان',
+    catAll:'هەموو', catBurgers:'بەرگەر', catSides:'لاوەکی', catSauces:'سۆس', catDrinks:'خواردنەوە',
+    customize:'گۆڕانکاری', addToCart:'زیادکردن', addToCartWithPrice:'زیادکردن بۆ سەبەتە',
+    tagSpicy:'تیژ', tagChef:'پێشنیاری شێف', tagVegan:'ڕووەکی', tagNew:'نوێ',
+    noResults:'هیچ ئەنجامێک نەدۆزرایەوە', noResultsHint:'وشەیەکی تر یان بەشێکی تر تاقی بکەرەوە.',
+    spiceLevel:'ئاستی تیژی', addons:'زیادکردنەکان', remove:'لابردن', ice:'سەهۆڵ', required:'پێویستە',
+    quantity:'ژمارە', cartTitle:'داواکارییەکەت',
+    cartEmpty:'سەبەتەکەت بەتاڵە', cartEmptyHint:'شتێکی بەتام لە مینیوەکە زیاد بکە.',
+    browseMenu:'بینینی مینیو', clearCart:'سڕینەوە', checkout:'تەواوکردنی داواکاری',
+    subtotal:'کۆی سەرەتایی', total:'کۆی گشتی',
+    deliveryNote:'نرخی گەیاندن و باج لە کاتی تەواوکردنی داواکاریدا حیساب دەکرێن.',
+    viewCart:'بینینی سەبەتە',
+    openMenu:'مینیو',
+    addedToast:'زیادکرا بۆ سەبەتە', clearedToast:'سەبەتەکە بەتاڵ کرایەوە', removedToast:'لە سەبەتەکە لابرا',
+    checkoutToast:'تەواوکردنی داواکاری بەم زووانە بەردەست دەبێت.',
+    menuTitle:'مینیوەکەمان', menuSubtitle:'تازە، سماشکراو، و بەپێی داواکاری ئامادە دەکرێت.',
+    decrease:'کەمکردنەوەی ژمارە', increase:'زیادکردنی ژمارە', removeLine:'لابردنی خواردن',
+    themeToDark:'گۆڕین بۆ دۆخی تاریک', themeToLight:'گۆڕین بۆ دۆخی ڕووناک',
+    footerTagline:'سماشکراو. کرسپی. زێڕین. هەموو جارێک تازە ئامادە دەکرێت.',
+    infoTitle:'سماشکراو. کرسپی. زێڕین.',
+    infoText:'سوپاس بۆ سەردانەکەتان. هەموو بەرگەرێک هەر لە کاتی داواکردندا تازە ئامادە دەکرێت — گەرم، ئاودار، و پڕ لەو کرانچییە زێڕینە.',
+    contactTitle:'پەیوەندی',
+    openingHours:'کاتژمێری کارکردن',
+    weeklySchedule:'خشتەی هەفتانە',
+    openNow:'ئێستا کراوەیە',
+    closedNow:'داخراوە',
+    openDaily:'ڕۆژانە کراوەیە',
+    hoursNote:'کاتەکان بە کاتی بەغدا نیشان دراون.',
+    addressLine1:'شەقامی گوڵان، بۆلیڤارد',
+    addressLine2:'هەولێر، پارێزگای هەولێر، 44001، عێراق',
+    whatsappCta:'واتساپ',
+    callCta:'پەیوەندیکردن',
+    chatCta:'چات',
+    directionsCta:'نەخشە',
+    rights:'هەموو مافەکان پارێزراون.',
+    poweredBy:'دروستکراوە لەلایەن',
+    orderType:'جۆری داواکاری', dineIn:'لە چێشتخانە', takeaway:'بۆ بردنەوە', tableNumber:'ژمارەی مێز', tablePlaceholder:'بۆ نموونە 5', tableRequired:'تکایە ژمارەی مێزەکەت بنووسە', sendOrder:'ناردنی داواکاری بە واتساپ', sentToast:'داواکارییەکەت لە واتساپ ئامادەیە — ناردن دابگرە', orderNote:'داواکارییەکەت ڕاستەوخۆ بە واتساپ بۆ کاشێر دەنێردرێت.',
+  },
+};
+
+const NUMBER_LOCALE   = { en:'en-IQ', ar:'ar-IQ', ku:'ckb-IQ' };
+const CURRENCY_SUFFIX = { en:'IQD',   ar:'د.ع',   ku:'د.ع'   };
+
+/* ====================================================================
+ * §3 — UTILITIES
+ * ==================================================================== */
+
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;',
+  }[c]));
+}
+
+const _nfCache = new Map();
+function getNumberFormat(locale) {
+  let nf = _nfCache.get(locale);
+  if (nf) return nf;
+  try { nf = new Intl.NumberFormat(NUMBER_LOCALE[locale] || 'en-IQ', { maximumFractionDigits: 0 }); }
+  catch { nf = new Intl.NumberFormat('en-IQ', { maximumFractionDigits: 0 }); }
+  _nfCache.set(locale, nf);
+  return nf;
+}
+
+function formatNumber(value, locale) {
+  return getNumberFormat(locale || state.locale).format(value);
+}
+
+function formatPrice(amount, locale) {
+  const l = locale || state.locale;
+  return formatNumber(amount, l) + ' ' + CURRENCY_SUFFIX[l];
+}
+
+function tx(obj, locale) {
+  const l = locale || state.locale;
+  if (!obj) return '';
+  return obj[l] || obj.en || '';
+}
+
+function storageGet(key) {
+  try { return window.localStorage.getItem(key); }
+  catch { return null; }
+}
+
+function storageSet(key, value) {
+  try { window.localStorage.setItem(key, value); }
+  catch { /* private mode / quota */ }
+}
+
+function lineKey(itemId, selections) {
+  const parts = Object.keys(selections)
+    .sort()
+    .map((gid) => gid + ':' + [...(selections[gid] || [])].sort().join(','))
+    .join('|');
+  return itemId + '#' + parts;
+}
+
+// Small versions of item/slide photos live in image/thumb/ (full size is kept for the item popup)
+function thumbSrc(src) { return String(src).replace(/^image\//, 'image/thumb/'); }
+
+// Warm the browser cache with every card and slide image while the intro screen is showing,
+// so the menu appears instantly when the customer taps "Menu"
+function preloadMenuImages() {
+  const urls = [...HERO_SLIDES.map((s) => thumbSrc(s.src)), ...MENU.filter((m) => m.image).map((m) => thumbSrc(m.image))];
+  urls.forEach((u) => { const img = new Image(); img.decoding = 'async'; img.src = u; });
+}
+
+// Arabic-Indic (٠-٩) and Persian/Kurdish (۰-۹) digits → 0-9
+function toLatinDigits(s) {
+  return String(s).replace(/[٠-٩۰-۹]/g, (d) => String(d.charCodeAt(0) & 0xF));
+}
+
+// Privacy-friendly visitor stats (GoatCounter, no cookies). Does nothing until the script has loaded.
+function track(name) {
+  try {
+    if (window.goatcounter && typeof window.goatcounter.count === 'function') {
+      window.goatcounter.count({ path: name, title: name, event: true });
+    }
+  } catch { /* stats must never break the menu */ }
+}
+
+function clampQty(n) {
+  const x = Math.trunc(Number(n));
+  if (!Number.isFinite(x)) return 1;
+  return Math.min(MAX_QTY, Math.max(1, x));
+}
+
+/* ====================================================================
+ * §4 — STATE
+ * ==================================================================== */
+
+const state = {
+  locale: 'en',
+  theme: 'light',
+  activeCategory: 'all',
+  search: '',
+  cart: [],
+  openItemId: null,
+  draftSelections: {},
+  orderType: 'dine-in',
+  table: '',
+  draftQty: 1,
+  introVisible: true,
+  isOpen: false,
+};
+
+let _sectionObserver = null;
+let _scrollSpySuspendedUntil = 0;
+
+function persist() {
+  storageSet(STORAGE_KEY, JSON.stringify({
+    locale: state.locale,
+    theme: state.theme,
+    cart: state.cart,
+  }));
+}
+
+function restore() {
+  const raw = storageGet(STORAGE_KEY);
+  if (!raw) return;
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch { return; }
+  if (!parsed || typeof parsed !== 'object') return;
+
+  if (parsed.locale && I18N[parsed.locale]) state.locale = parsed.locale;
+  if (parsed.theme === 'dark' || parsed.theme === 'light') state.theme = parsed.theme;
+
+  if (Array.isArray(parsed.cart)) {
+    state.cart = parsed.cart
+      .filter((l) =>
+        l && typeof l === 'object' &&
+        typeof l.itemId === 'string' &&
+        MENU.some((m) => m.id === l.itemId) &&
+        Number.isFinite(Number(l.qty)) &&
+        l.selections && typeof l.selections === 'object'
+      )
+      .map((l) => ({
+        lineId: String(l.lineId || lineKey(l.itemId, l.selections)),
+        itemId: l.itemId,
+        qty: clampQty(l.qty),
+        selections: Object.fromEntries(
+          Object.entries(l.selections).map(([k, v]) => [k, Array.isArray(v) ? v.map(String) : []])
+        ),
+      }));
+  }
+}
+
+/* ====================================================================
+ * §5 — DOMAIN LOGIC
+ * ==================================================================== */
+
+function findItem(itemId) { return MENU.find((m) => m.id === itemId) || null; }
+
+function defaultSelectionsFor(item) {
+  const out = {};
+  const groups = MODIFIER_SETS[item.modifierSet] || [];
+  for (const g of groups) {
+    if (g.type === 'single') {
+      const def = g.defaultOptionId || (g.options[0] && g.options[0].id);
+      out[g.id] = def ? [def] : [];
+    } else {
+      out[g.id] = [];
+    }
+  }
+  return out;
+}
+
+function modifiersPrice(item, selections) {
+  const groups = MODIFIER_SETS[item.modifierSet] || [];
+  let sum = 0;
+  for (const g of groups) {
+    const picked = selections[g.id] || [];
+    for (const optId of picked) {
+      const opt = g.options.find((o) => o.id === optId);
+      if (opt) sum += opt.price;
+    }
+  }
+  return sum;
+}
+
+function unitPrice(item, selections) {
+  return item.price + modifiersPrice(item, selections);
+}
+
+function selectionsSummary(item, selections) {
+  const groups = MODIFIER_SETS[item.modifierSet] || [];
+  const bits = [];
+  for (const g of groups) {
+    for (const optId of selections[g.id] || []) {
+      const opt = g.options.find((o) => o.id === optId);
+      if (opt) bits.push(tx(opt.label));
+    }
+  }
+  return bits.join(' · ');
+}
+
+function cartCount() { return state.cart.reduce((n, l) => n + l.qty, 0); }
+
+function cartSubtotal() {
+  return state.cart.reduce((sum, l) => {
+    const item = findItem(l.itemId);
+    if (!item) return sum;
+    return sum + unitPrice(item, l.selections) * l.qty;
+  }, 0);
+}
+
+function addToCart(itemId, selections, qty) {
+  const item = findItem(itemId);
+  if (!item || !item.available) return;
+
+  const q = clampQty(qty);
+  const key = lineKey(itemId, selections);
+  const existing = state.cart.find((l) => l.lineId === key);
+
+  if (existing) {
+    existing.qty = clampQty(existing.qty + q);
+  } else {
+    state.cart.push({
+      lineId: key,
+      itemId,
+      qty: q,
+      selections: Object.fromEntries(
+        Object.entries(selections).map(([k, v]) => [k, [...v]])
+      ),
+    });
+  }
+  persist();
+  renderCart();
+  renderFloatingBar();
+  refreshIcons();
+  [$('cartBtn'), $('floatingBtn')].forEach((el) => {
+    if (!el) return;
+    el.classList.remove('cart-hop');
+    void el.offsetWidth;
+    el.classList.add('cart-hop');
+  });
+}
+
+function setLineQty(lineId, qty) {
+  const idx = state.cart.findIndex((l) => l.lineId === lineId);
+  if (idx === -1) return;
+  const q = Math.trunc(Number(qty));
+  if (!Number.isFinite(q) || q <= 0) {
+    state.cart.splice(idx, 1);
+  } else {
+    state.cart[idx].qty = Math.min(MAX_QTY, q);
+  }
+  persist();
+  renderCart();
+  renderFloatingBar();
+  refreshIcons();
+}
+
+function removeLine(lineId) {
+  const before = state.cart.length;
+  state.cart = state.cart.filter((l) => l.lineId !== lineId);
+  if (state.cart.length === before) return;
+  persist();
+  renderCart();
+  renderFloatingBar();
+  refreshIcons();
+  showToast(t('removedToast'));
+}
+
+/* The cashier always receives the order in English, whatever language the customer browses in */
+function buildOrderMessage() {
+  const lines = ['🍔 New order – Smashed Burger'];
+  lines.push(state.orderType === 'takeaway' ? '🛍️ Takeaway' : '🪑 Table ' + state.table);
+  lines.push('');
+  for (const line of state.cart) {
+    const item = findItem(line.itemId);
+    if (!item) continue;
+    lines.push(line.qty + '× ' + tx(item.name, 'en') + ' — ' + formatPrice(unitPrice(item, line.selections) * line.qty, 'en'));
+    const groups = MODIFIER_SETS[item.modifierSet] || [];
+    const picks = [];
+    for (const g of groups) {
+      for (const optId of line.selections[g.id] || []) {
+        const opt = g.options.find((o) => o.id === optId);
+        if (opt) picks.push(tx(opt.label, 'en'));
+      }
+    }
+    if (picks.length) lines.push('   • ' + picks.join(', '));
+  }
+  lines.push('');
+  lines.push('Total: ' + formatPrice(cartSubtotal(), 'en'));
+  return lines.join('\n');
+}
+
+function sendOrderOnWhatsApp() {
+  if (state.cart.length === 0) return;
+  if (state.orderType === 'dine-in' && !state.table) {
+    showToast(t('tableRequired'));
+    const input = $('tableInput');
+    if (input) input.focus();
+    return;
+  }
+  track('order/' + state.orderType);
+  const url = STORE.orderWhatsapp + '?text=' + encodeURIComponent(buildOrderMessage());
+  const win = window.open(url, '_blank');
+  if (win) win.opener = null;
+  else window.location.href = url;
+  showToast(t('sentToast'));
+}
+
+function clearCart() {
+  if (state.cart.length === 0) return;
+  state.cart = [];
+  persist();
+  renderCart();
+  renderFloatingBar();
+  refreshIcons();
+  showToast(t('clearedToast'));
+}
+
+/* ====================================================================
+ * §6 — BUSINESS HOURS
+ * ==================================================================== */
+
+function getStoreTimeParts() {
+  try {
+    const fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone: STORE_TZ,
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false,
+    });
+    const parts = fmt.formatToParts(new Date());
+    const rawHour = parseInt(parts.find((p) => p.type === 'hour').value, 10);
+    const minute  = parseInt(parts.find((p) => p.type === 'minute').value, 10);
+    const hour = (Number.isFinite(rawHour) ? rawHour : 0) % 24;
+    return { hour, minute: Number.isFinite(minute) ? minute : 0 };
+  } catch {
+    const d = new Date();
+    return { hour: d.getHours(), minute: d.getMinutes() };
+  }
+}
+
+function computeIsOpenNow() {
+  const { hour, minute } = getStoreTimeParts();
+  const now = hour * 60 + minute;
+  return now >= OPEN_MINUTES_OF_DAY && now < CLOSE_MINUTES_OF_DAY;
+}
+
+function renderOpenStatus() {
+  const badge = $('openNowBadge');
+  const label = $('openNowLabel');
+  if (!badge || !label) return;
+
+  if (state.isOpen) {
+    badge.className =
+      'inline-flex shrink-0 items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/40';
+    label.textContent = t('openNow');
+  } else {
+    badge.className =
+      'inline-flex shrink-0 items-center gap-1 rounded-full bg-black/25 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/30';
+    label.textContent = t('closedNow');
+  }
+}
+
+function refreshOpenStatus() {
+  state.isOpen = computeIsOpenNow();
+  renderOpenStatus();
+}
+
+/* ====================================================================
+ * §7 — RENDERERS
+ * ==================================================================== */
+
+const $ = (id) => document.getElementById(id);
+
+function t(key) { return (I18N[state.locale] && I18N[state.locale][key]) || I18N.en[key] || key; }
+
+function refreshIcons() {
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    try { window.lucide.createIcons(); } catch { /* ignore */ }
+  }
+}
+
+let _toastTimer = null;
+function showToast(message) {
+  const el = $('toast');
+  el.textContent = message;
+  el.classList.remove('opacity-0', 'translate-y-3');
+  el.classList.add('opacity-100', 'translate-y-0');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => {
+    el.classList.remove('opacity-100', 'translate-y-0');
+    el.classList.add('opacity-0', 'translate-y-3');
+  }, 1800);
+}
+
+function applyTheme(theme) {
+  state.theme = (theme === 'dark') ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', state.theme);
+
+  const meta = $('themeColorMeta');
+  if (meta) meta.setAttribute('content', state.theme === 'dark' ? '#18181B' : '#F5F2EC');
+
+  renderThemeToggles();
+  refreshIcons();
+}
+
+function renderThemeToggles() {
+  const isDark = state.theme === 'dark';
+  const iconName = isDark ? 'sun' : 'moon';
+  const labelKey = isDark ? 'themeToLight' : 'themeToDark';
+  const html = '<i data-lucide="' + iconName + '" class="h-5 w-5"></i>';
+
+  [$('themeToggle'), $('introThemeToggle')].forEach((btn) => {
+    if (!btn) return;
+    btn.innerHTML = html;
+    btn.setAttribute('aria-label', t(labelKey));
+    btn.setAttribute('title', t(labelKey));
+  });
+}
+
+function toggleTheme() {
+  applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+  persist();
+}
+
+function showIntro() {
+  state.introVisible = true;
+  document.body.classList.add('intro-active');
+  $('introScreen').classList.remove('intro-hidden');
+  document.body.style.overflow = 'hidden';
+  window.scrollTo(0, 0);
+}
+function hideIntro() {
+  state.introVisible = false;
+  document.body.classList.remove('intro-active');
+  $('introScreen').classList.add('intro-hidden');
+  document.body.style.overflow = '';
+}
+
+function applyLocale() {
+  const cfg = I18N[state.locale] || I18N.en;
+  const html = document.documentElement;
+
+  html.setAttribute('lang', cfg.htmlLang);
+  html.setAttribute('dir', cfg.dir);
+  html.setAttribute('data-locale', state.locale);
+
+  document.querySelectorAll('[data-i18n="brand"]').forEach((el) => { el.textContent = cfg.brand; });
+  document.querySelectorAll('[data-i18n="restaurant"]').forEach((el) => { el.textContent = cfg.restaurant; });
+  document.querySelectorAll('[data-i18n="openMenu"]').forEach((el) => { el.textContent = cfg.openMenu; });
+
+  const mt = $('menuTitle'); if (mt) mt.textContent = cfg.menuTitle;
+  const ms = $('menuSubtitle'); if (ms) ms.textContent = cfg.menuSubtitle;
+  const et = $('emptyTitle'); if (et) et.textContent = cfg.noResults;
+  const eh = $('emptyHint'); if (eh) eh.textContent = cfg.noResultsHint;
+  const dt = $('drawerTitle'); if (dt) dt.textContent = cfg.cartTitle;
+  const cb = $('clearCartBtn'); if (cb) cb.textContent = cfg.clearCart;
+  const fl = $('floatingLabel'); if (fl) fl.textContent = cfg.viewCart;
+
+  const input = $('searchInput');
+  if (input) {
+    input.placeholder = cfg.searchPlaceholder;
+    input.setAttribute('aria-label', cfg.searchPlaceholder);
+  }
+  const sc = $('searchClear'); if (sc) sc.setAttribute('aria-label', cfg.clearSearch);
+  const cbtn = $('cartBtn'); if (cbtn) cbtn.setAttribute('aria-label', cfg.cartTitle);
+  const hbtn = $('homeBtn'); if (hbtn) hbtn.setAttribute('aria-label', cfg.brand);
+
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const key = el.getAttribute('data-i18n');
+    if (!key) return;
+    const val = (I18N[state.locale] && I18N[state.locale][key]) || I18N.en[key];
+    if (typeof val === 'string') el.textContent = val;
+  });
+
+  renderLangSwitcher();
+  renderThemeToggles();
+  renderTabs();
+  renderGrid();
+  renderCart();
+  renderFloatingBar();
+  renderHoursList();
+  renderOpenStatus();
+  refreshIcons();
+}
+
+/* ── Language switcher ── */
+const GLOBE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>';
+const CHECK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+const CHEVRON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lang-chevron text-muted"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+function renderLangSwitcher() {
+  const current = state.locale;
+  const codes = Object.keys(I18N);
+
+  const build = (container, isIntro) => {
+    if (!container) return;
+    const triggerBg = isIntro ? 'bg-surface/85 backdrop-blur ring-edge/10' : 'bg-surface ring-edge/5';
+
+    const itemsHtml = codes.map((code) => {
+      const cfg = I18N[code];
+      const isActive = code === current;
+      return (
+        '<button type="button" class="lang-item group flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-start transition ' +
+          (isActive ? 'bg-brand/10' : 'hover:bg-edge/5') + '" ' +
+          'data-lang-code="' + esc(code) + '" role="option" aria-selected="' + (isActive ? 'true' : 'false') + '">' +
+          '<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-extrabold ' +
+            (isActive ? 'bg-brand text-white' : 'bg-surfaceAlt text-ink group-hover:bg-brand/15 group-hover:text-brand') + '">' +
+            esc(cfg.shortLabel) +
+          '</span>' +
+          '<span class="min-w-0 flex-1">' +
+            '<span class="block truncate text-sm font-semibold ' + (isActive ? 'text-brand' : 'text-ink') + '" dir="' + esc(cfg.dir) + '">' + esc(cfg.nativeName) + '</span>' +
+            '<span class="block text-[10px] font-bold uppercase tracking-wider text-muted">' + esc(cfg.htmlLang) + '</span>' +
+          '</span>' +
+          (isActive ? '<span class="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand text-white">' + CHECK_SVG + '</span>' : '') +
+        '</button>'
+      );
+    }).join('');
+
+    // Header uses a compact trigger (globe + short code); the intro screen keeps the full name
+    const triggerHtml = isIntro
+      ? '<button type="button" class="lang-trigger flex h-10 items-center gap-2 rounded-xl ps-1.5 pe-3 ring-1 transition hover:ring-brand/40 ' + triggerBg + '" aria-haspopup="listbox" aria-expanded="false" aria-label="Language">' +
+          '<span class="grid h-7 w-7 place-items-center rounded-lg bg-brand/10 text-brand">' + GLOBE_SVG + '</span>' +
+          '<span class="text-xs font-bold text-ink">' + esc(I18N[current].nativeName) + '</span>' +
+          CHEVRON_SVG +
+        '</button>'
+      : '<button type="button" class="lang-trigger flex h-10 items-center gap-1 rounded-xl px-2 ring-1 transition hover:ring-brand/40 ' + triggerBg + '" aria-haspopup="listbox" aria-expanded="false" aria-label="Language">' +
+          '<span class="text-brand">' + GLOBE_SVG + '</span>' +
+          '<span class="text-xs font-bold text-ink">' + esc(I18N[current].shortLabel) + '</span>' +
+        '</button>';
+
+    container.innerHTML =
+      triggerHtml +
+      '<div class="lang-menu absolute end-0 top-full z-50 mt-2 hidden w-52 flex-col gap-0.5 rounded-2xl bg-surface p-1.5 shadow-2xl ring-1 ring-edge/10" role="listbox">' +
+        itemsHtml +
+      '</div>';
+  };
+
+  build($('langSwitcher'), false);
+  build($('introLangSwitcher'), true);
+}
+
+function closeAllLangMenus() {
+  document.querySelectorAll('.lang-menu').forEach((m) => {
+    m.classList.add('hidden');
+    m.classList.remove('flex');
+  });
+  document.querySelectorAll('.lang-trigger').forEach((t) => {
+    t.setAttribute('aria-expanded', 'false');
+  });
+}
+
+/* Global delegation — set up once */
+function setupLangSwitcherEvents() {
+  document.addEventListener('click', (e) => {
+    // 1) Language item picked
+    const item = e.target.closest('.lang-item');
+    if (item) {
+      const code = item.getAttribute('data-lang-code');
+      if (code && I18N[code]) {
+        closeAllLangMenus();
+        if (code !== state.locale) {
+          state.locale = code;
+          persist();
+          applyLocale();
+        }
+      }
+      return;
+    }
+
+    // 2) Trigger clicked — toggle its menu
+    const trigger = e.target.closest('.lang-trigger');
+    if (trigger) {
+      const container = trigger.parentElement;
+      const menu = container ? container.querySelector('.lang-menu') : null;
+      if (!menu) return;
+
+      const isOpen = !menu.classList.contains('hidden');
+      closeAllLangMenus();
+
+      if (!isOpen) {
+        menu.classList.remove('hidden');
+        menu.classList.add('flex');
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+      return;
+    }
+
+    // 3) Click outside — close all
+    closeAllLangMenus();
+  });
+}
+
+function renderTabs() {
+  const wrap = $('tabs');
+  wrap.innerHTML = CATEGORIES.map((c) => {
+    const active = c.id === state.activeCategory;
+    return '<button type="button" role="tab" data-cat="' + esc(c.id) + '" ' +
+      'aria-selected="' + (active ? 'true' : 'false') + '" ' +
+      'class="cat-btn ' + (active ? 'is-active' : '') + '">' +
+      '<span class="cat-icon-wrap">' +
+        '<i data-lucide="' + esc(c.icon) + '"></i>' +
+      '</span>' +
+      '<span class="cat-label">' + esc(t(c.labelKey)) + '</span>' +
+      '<span class="cat-dot" aria-hidden="true"></span>' +
+    '</button>';
+  }).join('');
+  refreshIcons();
+}
+
+function setActiveTabVisual(categoryId) {
+  const wrap = $('tabs');
+  if (!wrap) return;
+  wrap.querySelectorAll('[data-cat]').forEach((btn) => {
+    const active = btn.getAttribute('data-cat') === categoryId;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+}
+
+function visibleItems() {
+  const q = state.search.trim().toLowerCase();
+  return MENU.filter((item) => {
+    if (!item.available) return false;
+    if (state.activeCategory !== 'all' && item.category !== state.activeCategory) return false;
+    if (!q) return true;
+    const haystack = [
+      tx(item.name, 'en'), tx(item.name, 'ar'), tx(item.name, 'ku'),
+      tx(item.desc, 'en'), tx(item.desc, 'ar'), tx(item.desc, 'ku'),
+    ].join(' ').toLowerCase();
+    return haystack.includes(q);
+  });
+}
+
+function renderItemMedia(item, opts) {
+  const sizeClass = (opts && opts.sizeClass) || 'text-5xl sm:text-6xl';
+  const showTags = !(opts && opts.hideTags);
+  const showPlus = !(opts && opts.hidePlus);
+
+  const tagPills = showTags ? item.tags.slice(0, 2).map((k) => {
+    const s = TAG_STYLES[k];
+    if (!s) return '';
+    return '<span class="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold ring-1 backdrop-blur ' + s.cls + '">' +
+      '<span aria-hidden="true">' + s.emoji + '</span>' +
+    '</span>';
+  }).join('') : '';
+
+  const plus = showPlus
+    ? '<span class="absolute bottom-2 end-2 z-10 grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white ring-1 ring-white/20 backdrop-blur transition group-hover:bg-brand group-hover:ring-brand">' +
+        '<i data-lucide="plus" class="h-3.5 w-3.5"></i>' +
+      '</span>'
+    : '';
+
+  if (item.image) {
+    return '<div class="item-media bg-gradient-to-br ' + esc(item.gradient) + '">' +
+      '<span class="absolute inset-0 grid place-items-center ' + sizeClass + '" aria-hidden="true">' + esc(item.emoji) + '</span>' +
+      '<img src="' + esc(thumbSrc(item.image)) + '" alt="' + esc(tx(item.name)) + '" loading="lazy" decoding="async" ' +
+        'onerror="this.style.display=\'none\'" />' +
+      (tagPills ? '<div class="absolute top-2 start-2 z-10 flex flex-col gap-1">' + tagPills + '</div>' : '') +
+      plus +
+    '</div>';
+  }
+
+  return '<div class="item-media bg-gradient-to-br ' + esc(item.gradient) + '">' +
+    '<span class="absolute inset-0 grid place-items-center ' + sizeClass + '" aria-hidden="true">' + esc(item.emoji) + '</span>' +
+    (tagPills ? '<div class="absolute top-2 start-2 z-10 flex flex-col gap-1">' + tagPills + '</div>' : '') +
+    plus +
+  '</div>';
+}
+
+function renderCard(item) {
+  return '<button type="button" data-open="' + esc(item.id) + '" ' +
+    'class="reveal group flex flex-col overflow-hidden rounded-2xl bg-surface text-start ring-1 ring-edge/5 shadow-card transition hover:-translate-y-0.5 hover:ring-brand/40 active:scale-[.99]">' +
+    renderItemMedia(item) +
+    '<div class="flex flex-1 flex-col gap-1 p-3">' +
+      '<h3 class="line-clamp-2 text-sm font-semibold leading-tight text-ink">' + esc(tx(item.name)) + '</h3>' +
+      '<p class="tnum mt-auto pt-1 text-sm font-bold text-brand">' + esc(formatPrice(item.price)) + '</p>' +
+    '</div>' +
+  '</button>';
+}
+
+function renderGrid() {
+  const grid = $('grid');
+  const empty = $('emptyState');
+  const all = visibleItems();
+
+  if (all.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    empty.classList.add('flex');
+    teardownSectionObserver();
+    return;
+  }
+
+  empty.classList.add('hidden');
+  empty.classList.remove('flex');
+
+  const searching = state.search.trim().length > 0;
+  const singleCategory = state.activeCategory !== 'all';
+
+  if (searching) {
+    grid.innerHTML = '<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">' +
+      all.map(renderCard).join('') + '</div>';
+    teardownSectionObserver();
+    refreshIcons();
+    observeReveals();
+    return;
+  }
+
+  const sectionsToShow = singleCategory
+    ? GRID_SECTIONS.filter((s) => s.id === state.activeCategory)
+    : GRID_SECTIONS;
+
+  grid.innerHTML = sectionsToShow.map((section, idx) => {
+    const items = all.filter((i) => i.category === section.id);
+    if (items.length === 0) return '';
+
+    const isFirst = idx === 0;
+
+    return '<section data-section="' + esc(section.id) + '" class="' + (isFirst ? '' : 'mt-10') + '">' +
+      '<div class="reveal mb-5 text-center">' +
+        '<h2 class="menu-section-title text-xl text-ink sm:text-2xl">' + esc(t(section.labelKey)) + '</h2>' +
+      '</div>' +
+      '<div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">' +
+        items.map(renderCard).join('') +
+      '</div>' +
+    '</section>';
+  }).join('');
+
+  refreshIcons();
+  setupSectionObserver();
+  observeReveals();
+}
+
+let _revealObserver = null;
+function observeReveals() {
+  const els = document.querySelectorAll('#grid .reveal:not(.is-in)');
+  if (!('IntersectionObserver' in window)) { els.forEach((el) => el.classList.add('is-in')); return; }
+  if (!_revealObserver) {
+    _revealObserver = new IntersectionObserver((entries) => {
+      // Stagger the items that appear together, so a row ripples in instead of popping at once
+      let n = 0;
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.style.setProperty('--reveal-delay', Math.min(n++ * 70, 280) + 'ms');
+        entry.target.classList.add('is-in');
+        _revealObserver.unobserve(entry.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+  }
+  els.forEach((el) => _revealObserver.observe(el));
+}
+
+function teardownSectionObserver() {
+  if (_sectionObserver) {
+    _sectionObserver.disconnect();
+    _sectionObserver = null;
+  }
+}
+
+function setupSectionObserver() {
+  teardownSectionObserver();
+
+  const sections = Array.from(document.querySelectorAll('#grid [data-section]'));
+  if (sections.length < 2) return;
+
+  const visible = new Map();
+
+  _sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      const id = entry.target.getAttribute('data-section');
+      visible.set(id, entry.isIntersecting ? entry.intersectionRatio : 0);
+    });
+
+    if (Date.now() < _scrollSpySuspendedUntil) return;
+
+    let bestId = null;
+    let bestRatio = 0;
+    visible.forEach((ratio, id) => {
+      if (ratio > bestRatio) { bestRatio = ratio; bestId = id; }
+    });
+
+    if (bestId) setActiveTabVisual(bestId);
+  }, {
+    rootMargin: '-220px 0px -40% 0px',
+    threshold: [0, 0.15, 0.3, 0.5, 0.75, 1],
+  });
+
+  sections.forEach((s) => _sectionObserver.observe(s));
+}
+
+function renderHoursList() {
+  const list = $('hoursList');
+  if (!list) return;
+
+  const names = DAY_NAMES[state.locale] || DAY_NAMES.en;
+  const range = '11:30 AM – 12:00 AM';
+  const todayIdx = new Date().getDay();
+
+  list.innerHTML = names.map((name, i) => {
+    const isToday = i === todayIdx;
+    return '<li class="flex items-center justify-between gap-3 py-2 ' + (isToday ? 'font-semibold' : '') + '">' +
+      '<span class="flex items-center gap-2 ' + (isToday ? 'text-white' : 'text-white/80') + '">' +
+        (isToday ? '<span class="h-1.5 w-1.5 rounded-full bg-white"></span>' : '') +
+        esc(name) +
+      '</span>' +
+      '<span class="tnum text-white" dir="ltr">' + esc(range) + '</span>' +
+    '</li>';
+  }).join('');
+}
+
+function renderCart() {
+  const body = $('drawerBody');
+  const footer = $('drawerFooter');
+
+  if (state.cart.length === 0) {
+    body.innerHTML =
+      '<div class="flex h-full flex-col items-center justify-center py-16 text-center">' +
+        '<div class="grid h-14 w-14 place-items-center rounded-full bg-edge/5 text-muted">' +
+          '<i data-lucide="shopping-bag" class="h-6 w-6"></i>' +
+        '</div>' +
+        '<p class="mt-4 font-display text-lg">' + esc(t('cartEmpty')) + '</p>' +
+        '<p class="mt-1 max-w-[16rem] text-sm text-muted">' + esc(t('cartEmptyHint')) + '</p>' +
+        '<button type="button" id="browseBtn" class="mt-5 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brandDark">' +
+          esc(t('browseMenu')) +
+        '</button>' +
+      '</div>';
+    footer.innerHTML = '';
+    return;
+  }
+
+  body.innerHTML = state.cart.map((line) => {
+    const item = findItem(line.itemId);
+    if (!item) return '';
+    const summary = selectionsSummary(item, line.selections);
+    const lineTotal = unitPrice(item, line.selections) * line.qty;
+
+    const thumb = item.image
+      ? '<div class="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br ' + esc(item.gradient) + '">' +
+          '<span class="absolute inset-0 grid place-items-center text-2xl" aria-hidden="true">' + esc(item.emoji) + '</span>' +
+          '<img src="' + esc(thumbSrc(item.image)) + '" alt="" class="absolute inset-0 h-full w-full object-cover" loading="lazy" onerror="this.style.display=\'none\'" />' +
+        '</div>'
+      : '<div class="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-to-br ' + esc(item.gradient) + ' text-2xl">' +
+          '<span aria-hidden="true">' + esc(item.emoji) + '</span>' +
+        '</div>';
+
+    return '<div class="mb-3 rounded-2xl bg-surfaceAlt p-3 ring-1 ring-edge/5">' +
+      '<div class="flex gap-3">' +
+        thumb +
+        '<div class="min-w-0 flex-1">' +
+          '<div class="flex items-start gap-2">' +
+            '<h4 class="min-w-0 flex-1 truncate text-sm font-semibold">' + esc(tx(item.name)) + '</h4>' +
+            '<button type="button" data-remove="' + esc(line.lineId) + '" aria-label="' + esc(t('removeLine')) + '" ' +
+              'class="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-muted transition hover:bg-edge/5 hover:text-hot">' +
+              '<i data-lucide="trash-2" class="h-3.5 w-3.5"></i>' +
+            '</button>' +
+          '</div>' +
+          (summary ? '<p class="mt-0.5 line-clamp-2 text-[11px] text-muted">' + esc(summary) + '</p>' : '') +
+          '<div class="mt-2 flex items-center gap-3">' +
+            '<div class="inline-flex items-center rounded-lg bg-base ring-1 ring-edge/10">' +
+              '<button type="button" data-dec="' + esc(line.lineId) + '" aria-label="' + esc(t('decrease')) + '" ' +
+                'class="grid h-7 w-7 place-items-center rounded-s-lg text-muted transition hover:bg-edge/5 hover:text-ink">' +
+                '<i data-lucide="minus" class="h-3 w-3"></i>' +
+              '</button>' +
+              '<span class="tnum w-8 text-center text-xs font-bold">' + esc(formatNumber(line.qty)) + '</span>' +
+              '<button type="button" data-inc="' + esc(line.lineId) + '" aria-label="' + esc(t('increase')) + '" ' +
+                'class="grid h-7 w-7 place-items-center rounded-e-lg text-muted transition hover:bg-edge/5 hover:text-ink">' +
+                '<i data-lucide="plus" class="h-3 w-3"></i>' +
+              '</button>' +
+            '</div>' +
+            '<span class="tnum ms-auto text-sm font-bold text-brand">' + esc(formatPrice(lineTotal)) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  const subtotal = cartSubtotal();
+  const dineIn = state.orderType === 'dine-in';
+  const segBtn = (type, labelKey, icon) => {
+    const on = state.orderType === type;
+    return '<button type="button" data-order-type="' + type + '" aria-pressed="' + (on ? 'true' : 'false') + '" ' +
+      'class="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition ' +
+        (on ? 'bg-brand text-white shadow-card' : 'text-muted hover:text-ink') + '">' +
+      '<i data-lucide="' + icon + '" class="h-3.5 w-3.5"></i>' + esc(t(labelKey)) +
+    '</button>';
+  };
+
+  footer.innerHTML =
+    '<div class="flex rounded-xl bg-surfaceAlt p-1 ring-1 ring-edge/5" role="group" aria-label="' + esc(t('orderType')) + '">' +
+      segBtn('dine-in', 'dineIn', 'utensils') +
+      segBtn('takeaway', 'takeaway', 'shopping-bag') +
+    '</div>' +
+    (dineIn
+      ? '<label class="mt-3 flex items-center gap-3 rounded-xl bg-surfaceAlt px-3 py-2 ring-1 ring-edge/5 focus-within:ring-2 focus-within:ring-brand/60">' +
+          '<i data-lucide="armchair" class="h-4 w-4 shrink-0 text-brand"></i>' +
+          '<span class="text-sm font-semibold">' + esc(t('tableNumber')) + '</span>' +
+          '<input id="tableInput" type="text" inputmode="numeric" maxlength="4" autocomplete="off" dir="ltr" ' +
+            'value="' + esc(state.table) + '" placeholder="' + esc(t('tablePlaceholder')) + '" ' +
+            'class="tnum ms-auto w-20 rounded-lg border-0 bg-surface px-2 py-1.5 text-center text-sm font-bold text-ink ring-1 ring-edge/10 placeholder:font-normal placeholder:text-muted focus:ring-brand/60" />' +
+        '</label>'
+      : '') +
+    '<div class="mt-3 flex items-center justify-between text-[1rem] text-ink">' +
+      '<span class="font-display">' + esc(t('total')) + '</span>' +
+      '<span class="tnum font-extrabold text-brand">' + esc(formatPrice(subtotal)) + '</span>' +
+    '</div>' +
+    '<p class="mt-1 text-[11px] text-muted">' + esc(t('orderNote')) + '</p>' +
+    '<button type="button" id="checkoutBtn" ' +
+      'class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand to-brandDark px-4 py-3 text-sm font-bold text-white transition hover:from-brandDark hover:to-brandDeeper active:scale-[.99]">' +
+      '<i data-lucide="send" class="h-4 w-4 rtl-flip"></i>' +
+      '<span>' + esc(t('sendOrder')) + '</span>' +
+    '</button>';
+
+  refreshIcons();
+}
+
+function renderFloatingBar() {
+  const bar = $('floatingBar');
+  const count = cartCount();
+  const has = count > 0;
+
+  const drawerOpen = !$('drawerRoot').classList.contains('hidden');
+  if (!has || drawerOpen || state.introVisible) {
+    bar.classList.add('hidden');
+  } else {
+    bar.classList.remove('hidden');
+    $('floatingCount').textContent = formatNumber(count);
+    $('floatingTotal').textContent = formatPrice(cartSubtotal());
+  }
+
+  const badge = $('cartBadge');
+  badge.textContent = formatNumber(count);
+  if (count > 0) {
+    badge.classList.remove('hidden');
+    badge.classList.remove('animate-pulseBadge');
+    void badge.offsetWidth;
+    badge.classList.add('animate-pulseBadge');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+function openItemModal(itemId) {
+  const item = findItem(itemId);
+  if (!item || !item.available) return;
+
+  state.openItemId = itemId;
+  track('item/' + itemId);
+  state.draftSelections = defaultSelectionsFor(item);
+  state.draftQty = 1;
+
+  renderModal();
+  $('modalRoot').classList.remove('hidden');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    $('modalPanel').classList.add('is-open');
+    $('modalPanel').focus();
+  }));
+}
+
+function closeItemModal() {
+  const panel = $('modalPanel');
+  panel.classList.remove('is-open');
+  state.openItemId = null;
+  setTimeout(() => { $('modalRoot').classList.add('hidden'); }, 280);
+}
+
+function renderModal() {
+  const item = findItem(state.openItemId);
+  if (!item) return;
+
+  const groups = MODIFIER_SETS[item.modifierSet] || [];
+  const livePrice = unitPrice(item, state.draftSelections) * state.draftQty;
+
+  const groupsHtml = groups.map((g) => {
+    const picked = state.draftSelections[g.id] || [];
+    const requiredTag = (g.type === 'single')
+      ? '<span class="ms-2 rounded-full bg-brand/20 px-2 py-0.5 text-[10px] font-bold text-brand">' + esc(t('required')) + '</span>'
+      : '';
+
+    const optionsHtml = g.options.map((opt) => {
+      const isOn = picked.includes(opt.id);
+      const priceLabel = opt.price > 0
+        ? '<span class="tnum ms-auto text-[11px] font-semibold text-brand">+' + esc(formatNumber(opt.price)) + '</span>'
+        : '';
+      const shape = g.type === 'single' ? 'rounded-full' : 'rounded-md';
+
+      return '<button type="button" ' +
+        'data-group="' + esc(g.id) + '" data-option="' + esc(opt.id) + '" data-gtype="' + esc(g.type) + '" ' +
+        'aria-pressed="' + (isOn ? 'true' : 'false') + '" ' +
+        'class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start ring-1 transition ' +
+          (isOn ? 'bg-brand/10 ring-brand/50' : 'bg-surfaceAlt ring-edge/5 hover:ring-edge/15') + '">' +
+        '<span class="grid h-4 w-4 shrink-0 place-items-center border ' + shape + ' ' +
+          (isOn ? 'border-brand bg-brand' : 'border-edge/25') + '">' +
+          (isOn ? '<i data-lucide="check" class="h-3 w-3 text-white"></i>' : '') +
+        '</span>' +
+        '<span class="text-xs font-medium">' + esc(tx(opt.label)) + '</span>' +
+        priceLabel +
+      '</button>';
+    }).join('');
+
+    return '<section class="mb-4">' +
+      '<h4 class="mb-2 flex items-center text-xs font-bold uppercase tracking-wide text-muted">' +
+        esc(t(g.labelKey)) + requiredTag +
+      '</h4>' +
+      '<div class="grid gap-1.5 sm:grid-cols-2">' + optionsHtml + '</div>' +
+    '</section>';
+  }).join('');
+
+  const headerMedia = item.image
+    // Whole photo at its natural shape (no cropping); the small card image shows instantly while the full one loads
+    ? '<div class="relative shrink-0">' +
+        '<div class="relative overflow-hidden bg-surface">' +
+          '<img src="' + esc(item.image) + '" alt="' + esc(tx(item.name)) + '" ' +
+            'class="mx-auto block h-auto max-h-[46vh] w-auto max-w-full" ' +
+            'style="background:url(\'' + esc(thumbSrc(item.image)) + '\') center / contain no-repeat" ' +
+            'onerror="this.style.display=\'none\'" />' +
+        '</div>' +
+        '<button type="button" id="modalClose" aria-label="Close" ' +
+          'class="absolute top-3 end-3 z-20 grid h-9 w-9 place-items-center rounded-lg bg-black/60 text-white backdrop-blur transition hover:bg-black/80">' +
+          '<i data-lucide="x" class="h-4 w-4"></i>' +
+        '</button>' +
+        '<div class="px-5 pt-4">' +
+          '<h3 id="modalTitle" class="font-display text-xl leading-tight text-ink">' + esc(tx(item.name)) + '</h3>' +
+          '<p class="mt-1 text-sm text-muted">' + esc(tx(item.desc)) + '</p>' +
+          '<p class="tnum mt-1.5 text-[1rem] font-bold text-brand">' + esc(formatPrice(item.price)) + '</p>' +
+        '</div>' +
+      '</div>'
+    : '<div class="relative shrink-0 bg-gradient-to-br ' + esc(item.gradient) + ' p-5">' +
+        '<button type="button" id="modalClose" aria-label="Close" ' +
+          'class="absolute top-3 end-3 grid h-9 w-9 place-items-center rounded-lg bg-black/60 text-white backdrop-blur transition hover:bg-black/80">' +
+          '<i data-lucide="x" class="h-4 w-4"></i>' +
+        '</button>' +
+        '<div class="flex items-center gap-4">' +
+          '<span class="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-black/30 text-4xl" aria-hidden="true">' + esc(item.emoji) + '</span>' +
+          '<div class="min-w-0">' +
+            '<h3 id="modalTitle" class="font-display text-xl leading-tight text-white">' + esc(tx(item.name)) + '</h3>' +
+            '<p class="mt-1 line-clamp-2 text-xs text-white/70">' + esc(tx(item.desc)) + '</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+  $('modalPanel').innerHTML =
+    headerMedia +
+    '<div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">' +
+      (groupsHtml || (item.image ? '' : '<p class="text-sm text-muted">' + esc(tx(item.desc)) + '</p>')) +
+    '</div>' +
+    '<footer class="shrink-0 border-t border-edge/10 bg-surface px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">' +
+      '<div class="mb-3 flex items-center justify-between">' +
+        '<span class="text-xs font-bold uppercase tracking-wide text-muted">' + esc(t('quantity')) + '</span>' +
+        '<div class="inline-flex items-center rounded-xl bg-base ring-1 ring-edge/10">' +
+          '<button type="button" id="draftDec" aria-label="' + esc(t('decrease')) + '" ' +
+            'class="grid h-9 w-9 place-items-center rounded-s-xl text-muted transition hover:bg-edge/5 hover:text-ink">' +
+            '<i data-lucide="minus" class="h-3.5 w-3.5"></i>' +
+          '</button>' +
+          '<span id="draftQty" class="tnum w-10 text-center text-sm font-bold">' + esc(formatNumber(state.draftQty)) + '</span>' +
+          '<button type="button" id="draftInc" aria-label="' + esc(t('increase')) + '" ' +
+            'class="grid h-9 w-9 place-items-center rounded-e-xl text-muted transition hover:bg-edge/5 hover:text-ink">' +
+            '<i data-lucide="plus" class="h-3.5 w-3.5"></i>' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+      '<button type="button" id="modalAdd" ' +
+        'class="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand to-brandDark px-4 py-3.5 text-sm font-bold text-white transition hover:from-brandDark hover:to-brandDeeper active:scale-[.99]">' +
+        '<span>' + esc(t('addToCartWithPrice')) + '</span>' +
+        '<span class="tnum">·</span>' +
+        '<span class="tnum">' + esc(formatPrice(livePrice)) + '</span>' +
+      '</button>' +
+    '</footer>';
+
+  refreshIcons();
+}
+
+function refreshModalFooter() {
+  const item = findItem(state.openItemId);
+  if (!item) return;
+  const qtyEl = $('draftQty');
+  const addBtn = $('modalAdd');
+  if (qtyEl) qtyEl.textContent = formatNumber(state.draftQty);
+  if (addBtn) {
+    const live = unitPrice(item, state.draftSelections) * state.draftQty;
+    const spans = addBtn.querySelectorAll('span');
+    if (spans.length >= 3) spans[2].textContent = formatPrice(live);
+  }
+}
+
+function refreshModalOptions() {
+  const panel = $('modalPanel');
+  if (!panel) return;
+  panel.querySelectorAll('[data-group][data-option]').forEach((btn) => {
+    const gid = btn.getAttribute('data-group');
+    const oid = btn.getAttribute('data-option');
+    const on = (state.draftSelections[gid] || []).includes(oid);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.classList.toggle('bg-brand/10', on);
+    btn.classList.toggle('ring-brand/50', on);
+    btn.classList.toggle('bg-surfaceAlt', !on);
+    btn.classList.toggle('ring-edge/5', !on);
+
+    const box = btn.querySelector('span');
+    if (box) {
+      const isSingle = btn.getAttribute('data-gtype') === 'single';
+      box.className = 'grid h-4 w-4 shrink-0 place-items-center border ' +
+        (isSingle ? 'rounded-full ' : 'rounded-md ') +
+        (on ? 'border-brand bg-brand' : 'border-edge/25');
+      box.innerHTML = on ? '<i data-lucide="check" class="h-3 w-3 text-white"></i>' : '';
+    }
+  });
+  refreshIcons();
+}
+
+function openDrawer() {
+  const root = $('drawerRoot');
+  root.classList.remove('hidden');
+  renderCart();
+  refreshIcons();
+  renderFloatingBar();
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    $('drawer').classList.add('is-open');
+  }));
+}
+
+function closeDrawer() {
+  const drawer = $('drawer');
+  drawer.classList.remove('is-open');
+  setTimeout(() => {
+    $('drawerRoot').classList.add('hidden');
+    renderFloatingBar();
+  }, 320);
+}
+
+/* ====================================================================
+ * §7b — HERO SLIDER
+ * ==================================================================== */
+
+const heroState = { index: 0, timer: null, paused: false };
+
+function heroCount() { return HERO_SLIDES.length; }
+
+function heroGoTo(i) {
+  const n = heroCount();
+  if (!n) return;
+  heroState.index = ((i % n) + n) % n;
+
+  const track = $('heroTrack');
+  if (track) track.style.transform = 'translateX(' + (-heroState.index * 100) + '%)';
+
+  const dots = $('heroDots');
+  if (dots) {
+    dots.querySelectorAll('[data-dot]').forEach((d, idx) => {
+      d.classList.toggle('is-active', idx === heroState.index);
+    });
+  }
+}
+
+function heroNext() { heroGoTo(heroState.index + 1); }
+function heroPrev() { heroGoTo(heroState.index - 1); }
+
+function heroStart() {
+  heroStop();
+  if (heroCount() < 2 || heroState.paused) return;
+  heroState.timer = window.setInterval(() => {
+    if (document.hidden) return;
+    heroNext();
+  }, HERO_INTERVAL_MS);
+}
+
+function heroStop() {
+  if (heroState.timer) { clearInterval(heroState.timer); heroState.timer = null; }
+}
+
+function renderHeroSlider() {
+  const track = $('heroTrack');
+  const dots  = $('heroDots');
+  if (!track || !dots) return;
+
+  track.innerHTML = HERO_SLIDES.map((s, i) =>
+    '<div class="hero-slide">' +
+      '<img src="' + esc(thumbSrc(s.src)) + '" srcset="' + esc(thumbSrc(s.src)) + ' 828w, ' + esc(s.src) + ' 1242w" sizes="(min-width: 1152px) 1152px, 100vw" alt="' + esc(s.alt) + '" ' +
+        'loading="' + (i === 0 ? 'eager' : 'lazy') + '" ' + (i === 0 ? 'fetchpriority="high" ' : '') +
+        'decoding="async" draggable="false" ' +
+        'onerror="this.style.display=\'none\'" />' +
+    '</div>'
+  ).join('');
+
+  dots.innerHTML = HERO_SLIDES.map((s, i) =>
+    '<button type="button" data-dot="' + i + '" ' +
+      'aria-label="' + esc(s.alt) + '" ' +
+      'class="hero-dot' + (i === 0 ? ' is-active' : '') + '"></button>'
+  ).join('');
+
+  heroGoTo(0);
+}
+
+function initHeroSlider() {
+  const slider = $('heroSlider');
+  const prev   = $('heroPrev');
+  const next   = $('heroNext');
+  const dots   = $('heroDots');
+  if (!slider) return;
+
+  renderHeroSlider();
+
+  if (prev) prev.addEventListener('click', () => { heroPrev(); heroStart(); });
+  if (next) next.addEventListener('click', () => { heroNext(); heroStart(); });
+
+  if (dots) {
+    dots.addEventListener('click', (e) => {
+      const d = e.target.closest('[data-dot]');
+      if (!d) return;
+      const i = parseInt(d.getAttribute('data-dot'), 10);
+      if (Number.isFinite(i)) { heroGoTo(i); heroStart(); }
+    });
+  }
+
+  slider.addEventListener('pointerenter', () => { heroState.paused = true;  heroStop();  });
+  slider.addEventListener('pointerleave', () => { heroState.paused = false; heroStart(); });
+  slider.addEventListener('focusin',      () => { heroState.paused = true;  heroStop();  });
+  slider.addEventListener('focusout',     () => { heroState.paused = false; heroStart(); });
+
+  let startX = 0, dragging = false;
+  slider.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    dragging = true; startX = e.clientX;
+  });
+  slider.addEventListener('pointerup', (e) => {
+    if (!dragging) return;
+    dragging = false;
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > 40) { dx < 0 ? heroNext() : heroPrev(); heroStart(); }
+  });
+  slider.addEventListener('pointercancel', () => { dragging = false; });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) heroStop(); else heroStart();
+  });
+
+  heroStart();
+  initHeroParallax(slider);
+}
+
+function initHeroParallax(slider) {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const header = document.querySelector('body > header');
+  let ticking = false;
+  let current = 0;
+  const update = () => {
+    ticking = false;
+    // Where the slider would be without the effect (undo the shift we applied last time)
+    const top = slider.getBoundingClientRect().top - current;
+    const headerH = header ? header.offsetHeight : 0;
+    // Once the slider starts passing under the sticky header, hold it back at 35% of the scroll
+    const passed = Math.max(0, Math.min(slider.offsetHeight, headerH - top));
+    const y = Math.round(passed * 0.35);
+    if (y !== current) {
+      current = y;
+      slider.style.transform = y ? 'translate3d(0,' + y + 'px,0)' : '';
+    }
+  };
+  const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  update();
+}
+
+/* ====================================================================
+ * §8 — EVENT WIRING
+ * ==================================================================== */
+
+$('themeToggle').addEventListener('click', toggleTheme);
+$('introThemeToggle').addEventListener('click', toggleTheme);
+
+$('enterMenuBtn').addEventListener('click', () => {
+  hideIntro();
+  renderFloatingBar();
+  refreshIcons();
+});
+
+$('homeBtn').addEventListener('click', () => {
+  showIntro();
+  renderFloatingBar();
+  refreshIcons();
+});
+
+const searchInput = $('searchInput');
+const searchClear = $('searchClear');
+
+searchInput.addEventListener('input', () => {
+  state.search = searchInput.value || '';
+  searchClear.classList.toggle('hidden', state.search.length === 0);
+  searchClear.classList.toggle('grid', state.search.length > 0);
+  renderGrid();
+});
+
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  state.search = '';
+  searchClear.classList.add('hidden');
+  searchClear.classList.remove('grid');
+  renderGrid();
+  searchInput.focus();
+});
+
+$('tabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-cat]');
+  if (!btn) return;
+  const id = btn.getAttribute('data-cat');
+  if (!id || id === state.activeCategory) return;
+
+  _scrollSpySuspendedUntil = Date.now() + 900;
+
+  state.activeCategory = id;
+  renderTabs();
+  renderGrid();
+  refreshIcons();
+
+  requestAnimationFrame(() => {
+    const target = document.querySelector('#grid [data-section="' + id + '"]');
+    if (target) {
+      const y = target.getBoundingClientRect().top + window.scrollY - 210;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  });
+});
+
+$('grid').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-open]');
+  if (!btn) return;
+  const id = btn.getAttribute('data-open');
+  if (id) openItemModal(id);
+});
+
+$('modalBackdrop').addEventListener('click', closeItemModal);
+
+$('modalPanel').addEventListener('click', (e) => {
+  if (e.target.closest('#modalClose')) { closeItemModal(); return; }
+
+  const optBtn = e.target.closest('[data-group][data-option]');
+  if (optBtn) {
+    const gid = optBtn.getAttribute('data-group');
+    const oid = optBtn.getAttribute('data-option');
+    const gtype = optBtn.getAttribute('data-gtype');
+    const item = findItem(state.openItemId);
+    if (!item || !gid || !oid) return;
+
+    const groups = MODIFIER_SETS[item.modifierSet] || [];
+    const group = groups.find((g) => g.id === gid);
+    if (!group) return;
+
+    const current = state.draftSelections[gid] || [];
+    if (gtype === 'single' || group.type === 'single') {
+      state.draftSelections[gid] = [oid];
+    } else {
+      state.draftSelections[gid] = current.includes(oid)
+        ? current.filter((x) => x !== oid)
+        : [...current, oid];
+    }
+
+    refreshModalOptions();
+    refreshModalFooter();
+    return;
+  }
+
+  if (e.target.closest('#draftDec')) {
+    state.draftQty = clampQty(state.draftQty - 1);
+    refreshModalFooter();
+    return;
+  }
+  if (e.target.closest('#draftInc')) {
+    state.draftQty = clampQty(state.draftQty + 1);
+    refreshModalFooter();
+    return;
+  }
+
+  if (e.target.closest('#modalAdd')) {
+    const item = findItem(state.openItemId);
+    if (!item) { closeItemModal(); return; }
+    addToCart(item.id, state.draftSelections, state.draftQty);
+    showToast(t('addedToast'));
+    closeItemModal();
+    return;
+  }
+});
+
+$('cartBtn').addEventListener('click', openDrawer);
+$('floatingBtn').addEventListener('click', openDrawer);
+
+$('drawerBackdrop').addEventListener('click', closeDrawer);
+$('closeDrawerBtn').addEventListener('click', closeDrawer);
+$('clearCartBtn').addEventListener('click', clearCart);
+
+$('drawerBody').addEventListener('click', (e) => {
+  if (e.target.closest('#browseBtn')) { closeDrawer(); return; }
+
+  const dec = e.target.closest('[data-dec]');
+  if (dec) {
+    const id = dec.getAttribute('data-dec');
+    const line = state.cart.find((l) => l.lineId === id);
+    if (line) setLineQty(id, line.qty - 1);
+    return;
+  }
+  const inc = e.target.closest('[data-inc]');
+  if (inc) {
+    const id = inc.getAttribute('data-inc');
+    const line = state.cart.find((l) => l.lineId === id);
+    if (line) setLineQty(id, line.qty + 1);
+    return;
+  }
+  const rem = e.target.closest('[data-remove]');
+  if (rem) {
+    const id = rem.getAttribute('data-remove');
+    if (id) removeLine(id);
+    return;
+  }
+});
+
+$('drawerFooter').addEventListener('input', (e) => {
+  if (e.target.id !== 'tableInput') return;
+  // Digits only (also accepts Arabic/Kurdish digits typed on the phone keyboard)
+  const clean = toLatinDigits(e.target.value).replace(/\D/g, '').slice(0, 4);
+  if (clean !== e.target.value) e.target.value = clean;
+  state.table = clean;
+});
+
+$('drawerFooter').addEventListener('click', (e) => {
+  const typeBtn = e.target.closest('[data-order-type]');
+  if (typeBtn) {
+    state.orderType = typeBtn.getAttribute('data-order-type') === 'takeaway' ? 'takeaway' : 'dine-in';
+    renderCart();
+    return;
+  }
+  if (e.target.closest('#checkoutBtn')) sendOrderOnWhatsApp();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  closeAllLangMenus();
+  if (!$('modalRoot').classList.contains('hidden')) { closeItemModal(); return; }
+  if (!$('drawerRoot').classList.contains('hidden')) { closeDrawer(); }
+});
+
+/* ====================================================================
+ * §9 — BOOTSTRAP
+ * ==================================================================== */
+
+function init() {
+  const year = String(new Date().getFullYear());
+  if ($('yearNow')) $('yearNow').textContent = year;
+  if ($('yearNowIntro')) $('yearNowIntro').textContent = year;
+
+  // Set up the language switcher delegation ONCE — before the first render
+  setupLangSwitcherEvents();
+
+  restore();
+
+  // Table QR codes open the menu as ?table=7 — pre-fill the table so the customer doesn't have to
+  try {
+    const tableParam = toLatinDigits(new URLSearchParams(window.location.search).get('table') || '').replace(/\D/g, '').slice(0, 4);
+    if (tableParam) { state.table = tableParam; state.orderType = 'dine-in'; }
+  } catch { /* old browsers */ }
+  applyTheme(state.theme);
+  state.isOpen = computeIsOpenNow();
+  applyLocale();
+  initHeroSlider();
+  showIntro();
+  preloadMenuImages();
+  renderCart();
+  renderFloatingBar();
+  refreshIcons();
+
+  window.setInterval(refreshOpenStatus, 60_000);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init, { once: true });
+} else {
+  init();
+}
+
+window.addEventListener('load', refreshIcons);
+</script>
+<!-- Order system (instead of WhatsApp ordering) -->
+<script src="js/config.js"></script>
+<script src="js/ordering.js"></script>
+</body>
+</html>

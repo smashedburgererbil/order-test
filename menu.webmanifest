@@ -1,0 +1,20 @@
+{
+  "name": "Smashed Burger",
+  "short_name": "Smashed Burger",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F5F2EC",
+  "theme_color": "#C4453A",
+  "icons": [
+    {
+      "src": "image/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "image/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

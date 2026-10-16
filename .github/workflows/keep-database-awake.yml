@@ -1,0 +1,18 @@
+# Keeps the free Supabase database from pausing (it pauses after ~7 days with no use).
+# Runs once a day and reads the public menu prices (read-only, changes nothing).
+name: Keep order database awake
+on:
+  schedule:
+    - cron: "17 6 * * *"   # every day 06:17 UTC (09:17 in Erbil)
+  workflow_dispatch: {}      # can also be run by hand from the Actions tab
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read menu prices
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: sb_publishable_u5gJeeiYj3mcOEWM-X6kjA_7DSzhISs" \
+            "https://zrmnxtcxibpwxssurelk.supabase.co/rest/v1/menu_items?select=id&limit=1")
+          echo "Database answered: $code"
+          test "$code" = "200"

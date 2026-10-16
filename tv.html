@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#18181B" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Smashed Burger — Order Screen</title>
+<link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Playfair+Display:wght@700;900&family=Noto+Sans+Arabic:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  html[data-theme="dark"] {
+    --c-base: 24 24 27; --c-surface: 39 39 42; --c-surface-alt: 63 63 70;
+    --c-ink: 255 255 255; --c-muted: 161 161 170; --c-edge: 255 255 255;
+    --c-accent: 196 69 58; --c-accent-hover: 168 55 46; --c-hot: 220 90 80;
+    --shadow-card: rgba(0,0,0,.7);
+  }
+  :root { color-scheme: dark; }
+  body { background: rgb(var(--c-base)); overflow: hidden; }
+  .hidden-view { display: none !important; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  .ar { font-family: 'Noto Sans Arabic', system-ui, sans-serif; }
+
+  /* Order numbers scale with the screen size, so they read from across the room */
+  .num { font-family: 'Playfair Display', Georgia, serif; font-weight: 900; line-height: 1; font-size: clamp(2.2rem, 7vw, 6.5rem); }
+  .num-prep { font-size: clamp(1.6rem, 4.2vw, 4rem); }
+
+  @keyframes popIn { 0% { opacity: 0; transform: scale(.6); } 60% { opacity: 1; transform: scale(1.08); } 100% { transform: scale(1); } }
+  @keyframes readyGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,.0), 0 20px 50px -20px rgba(74,222,128,.5); } 50% { box-shadow: 0 0 0 6px rgba(74,222,128,.25), 0 20px 60px -16px rgba(74,222,128,.7); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes bigIn { 0% { opacity: 0; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.05); } 100% { transform: scale(1); } }
+  @keyframes ring { from { transform: scale(.85); opacity: .9; } to { transform: scale(1.7); opacity: 0; } }
+  @keyframes dots { 0%, 20% { opacity: .2; } 50% { opacity: 1; } 100% { opacity: .2; } }
+  .pop-in { animation: popIn .6s cubic-bezier(.22,1,.36,1) both; }
+  .ready-tile { animation: readyGlow 2s ease-in-out infinite; }
+  .announce { animation: fadeIn .3s ease-out both; }
+  .announce-num { animation: bigIn .7s cubic-bezier(.22,1,.36,1) both; }
+  .announce-ring { position: absolute; inset: 0; border-radius: 9999px; border: 4px solid rgba(255,255,255,.7); animation: ring 1.4s ease-out infinite; }
+  .cooking-dot { animation: dots 1.4s infinite; }
+  .cooking-dot:nth-child(2) { animation-delay: .2s; } .cooking-dot:nth-child(3) { animation-delay: .4s; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; } }
+</style>
+<link rel="stylesheet" href="tailwind.css" />
+</head>
+<body class="min-h-screen font-sans text-ink antialiased">
+
+<!-- Sign in once (use the counter account); the screen stays signed in -->
+<section id="tvLogin" class="hidden-view grid min-h-screen place-items-center px-6">
+  <form id="tvLoginForm" class="w-full max-w-sm rounded-3xl bg-surface p-7 ring-1 ring-edge/10">
+    <img src="image/darksidelogo.webp" alt="Smashed Burger" class="mx-auto h-14 w-auto" />
+    <h1 class="mt-6 text-center font-display text-2xl">Order screen</h1>
+    <p class="mt-1 text-center text-sm text-muted">Sign in once with the counter account.</p>
+    <input id="tvEmail" type="email" required placeholder="Email" dir="ltr" class="mt-6 w-full rounded-xl border-0 bg-surfaceAlt px-4 py-3 text-sm text-ink ring-1 ring-edge/5 focus:ring-2 focus:ring-brand/60" />
+    <input id="tvPassword" type="password" required placeholder="Password" dir="ltr" class="mt-3 w-full rounded-xl border-0 bg-surfaceAlt px-4 py-3 text-sm text-ink ring-1 ring-edge/5 focus:ring-2 focus:ring-brand/60" />
+    <p id="tvError" class="mt-3 hidden rounded-lg bg-brand/15 px-3 py-2 text-xs font-semibold text-brand"></p>
+    <button type="submit" class="mt-5 w-full rounded-xl bg-gradient-to-r from-brand to-brandDark px-4 py-3.5 text-sm font-bold text-white">Sign in</button>
+  </form>
+</section>
+
+<!-- One tap to allow sound and full screen (browsers require a tap first) -->
+<section id="tvStart" class="hidden-view fixed inset-0 z-50 grid place-items-center bg-base px-6 text-center">
+  <div>
+    <img src="image/darksidelogo.webp" alt="Smashed Burger" class="mx-auto h-16 w-auto" />
+    <button id="tvStartBtn" type="button" class="mt-10 rounded-2xl bg-gradient-to-r from-brand to-brandDark px-10 py-5 text-xl font-bold text-white shadow-glow">Start order screen</button>
+    <p class="mt-4 text-sm text-muted">Turns on the "ready" chime and full screen.</p>
+  </div>
+</section>
+
+<main id="tvBoard" class="hidden-view flex h-screen flex-col">
+  <header class="flex items-center gap-4 px-[3vw] pb-[1.5vh] pt-[2.5vh]">
+    <img src="image/darksidelogo.webp" alt="Smashed Burger" class="h-[6vh] min-h-[36px] w-auto" />
+    <div class="ms-auto flex items-center gap-4">
+      <span id="tvLive" class="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-1.5 text-xs font-bold ring-1 ring-edge/10"><span class="h-2 w-2 rounded-full bg-current"></span><span>Live</span></span>
+      <span id="tvClock" class="tnum font-display text-[4vh] leading-none"></span>
+    </div>
+  </header>
+
+  <div class="grid min-h-0 flex-1 grid-cols-5 gap-[2vw] px-[3vw] pb-[3vh]">
+    <section class="col-span-2 flex min-h-0 flex-col rounded-[2rem] bg-surface p-[2.2vw] ring-1 ring-edge/5">
+      <div class="flex items-baseline gap-3">
+        <h2 class="font-display text-[clamp(1.4rem,3vw,3rem)] leading-none">Preparing</h2>
+        <span class="flex gap-1 text-brand" aria-hidden="true"><span class="cooking-dot">●</span><span class="cooking-dot">●</span><span class="cooking-dot">●</span></span>
+      </div>
+      <p class="ar mt-1 text-[clamp(.8rem,1.4vw,1.3rem)] text-muted" dir="rtl">ئامادە دەکرێت · قيد التحضير</p>
+      <div id="tvPrep" class="mt-[2vh] grid min-h-0 flex-1 auto-rows-min grid-cols-3 content-start gap-[1vw] overflow-hidden"></div>
+    </section>
+
+    <section class="col-span-3 flex min-h-0 flex-col rounded-[2rem] p-[2.2vw] ring-1 ring-[rgba(74,222,128,.25)]" style="background:linear-gradient(160deg,rgba(74,222,128,.14),rgba(74,222,128,.04))">
+      <div class="flex items-baseline gap-3">
+        <h2 class="font-display text-[clamp(1.4rem,3vw,3rem)] leading-none" style="color:#4ade80">Ready — please collect</h2>
+      </div>
+      <p class="ar mt-1 text-[clamp(.8rem,1.4vw,1.3rem)]" style="color:rgba(74,222,128,.8)" dir="rtl">ئامادەیە · جاهز للاستلام</p>
+      <div id="tvReady" class="mt-[2vh] grid min-h-0 flex-1 auto-rows-min grid-cols-3 content-start gap-[1.2vw] overflow-hidden"></div>
+    </section>
+  </div>
+</main>
+
+<!-- Full-screen announcement when an order becomes ready -->
+<div id="tvAnnounce" class="hidden-view announce fixed inset-0 z-40 grid place-items-center bg-gradient-to-br from-brand via-brandDark to-brandDeeper text-center text-white">
+  <div>
+    <p class="text-[clamp(1.2rem,3vw,2.6rem)] font-bold uppercase tracking-[.3em] text-white/80">Order ready</p>
+    <div class="relative mx-auto mt-[4vh] grid h-[42vh] w-[42vh] place-items-center rounded-full bg-white/15">
+      <span class="announce-ring"></span>
+      <span id="tvAnnounceNum" class="announce-num num tnum" style="font-size:20vh"></span>
+    </div>
+    <p class="ar mt-[4vh] text-[clamp(1.2rem,3vw,2.6rem)] font-bold" dir="rtl">داواکارییەکەت ئامادەیە · طلبك جاهز</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/tv.js"></script>
+</body>
+</html>
