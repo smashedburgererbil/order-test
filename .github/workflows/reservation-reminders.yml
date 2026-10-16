@@ -1,0 +1,15 @@
+# Sends due reservation reminders (push) and releases tables of guests who didn't come.
+# Runs every 15 minutes; also keeps the database awake.
+name: Reservation reminders
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send due reminders
+        run: |
+          curl -s -X POST -H "Content-Type: application/json" -d '{"action":"reminders"}' \
+            "https://zrmnxtcxibpwxssurelk.supabase.co/functions/v1/reservation-push"

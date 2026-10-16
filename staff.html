@@ -82,6 +82,8 @@
   .bell-wiggle { animation: wiggle .7s ease-in-out; }
   .sheet-panel { animation: sheetUp .34s cubic-bezier(.22,1,.36,1) both; }
   @media (min-width: 640px) { .sheet-panel { animation: riseIn .3s cubic-bezier(.22,1,.36,1) both; } }
+  .fp-pulse { animation: fpPulse 1.4s ease-in-out infinite; }
+  @keyframes fpPulse { 0%, 100% { opacity: .9; } 50% { opacity: .25; } }
   .backdrop-in { animation: fadeIn .2s ease-out both; }
   .sales-detail { animation: riseIn .4s cubic-bezier(.22,1,.36,1) both; }
   .ring-out { position: absolute; inset: 0; border-radius: 9999px; border: 2px solid rgb(var(--c-accent)); animation: ringOut 1.4s ease-out infinite; }
@@ -247,5 +249,8 @@
 <script src="js/config.js"></script>
 <script src="js/menu-data.js"></script>
 <script src="js/staff.js"></script>
+<!-- Table reservations -->
+<script src="js/floorplan.js"></script>
+<script src="js/staff-reservations.js"></script>
 </body>
 </html>

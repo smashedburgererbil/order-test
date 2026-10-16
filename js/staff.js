@@ -863,6 +863,7 @@ document.addEventListener('click', (e) => {
  * ==================================================================== */
 
 function openSheet(html, wide) {
+  $('sheetPanel').classList.remove('sm:max-w-5xl');
   $('sheetPanel').classList.toggle('sm:max-w-2xl', !!wide);
   $('sheetPanel').classList.toggle('sm:max-w-lg', !wide);
   const wasOpen = !$('sheetRoot').classList.contains('hidden');

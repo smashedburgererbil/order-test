@@ -499,7 +499,7 @@
   }, 1000);
 
   /* ── Opened from a notification (menu.html?order=…&t=…) or returning later ── */
-  try {
+  const fromLink = () => { try {
     const q = new URLSearchParams(location.search);
     if (q.get('order') && q.get('t')) {
       setActive({ id: q.get('order'), token: q.get('t'), code: '', at: Date.now() });
@@ -507,7 +507,10 @@
       hideIntro();
       openTracker();
     }
-  } catch { /* ignore */ }
+  } catch { /* ignore */ } };
+  // After the menu's own start-up, which shows the intro screen
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(fromLink, 0));
+  else setTimeout(fromLink, 0);
   if (getActive()) poll(true);
 
   // Re-render the tracker when the language changes
