@@ -21,7 +21,7 @@
   const COLORS = {
     free:     { fill: '#22c55e', stroke: '#15803d', text: '#ffffff' },
     selected: { fill: '#f5b301', stroke: '#b45309', text: '#1a1a1a' },
-    taken:    { fill: '#a1a1aa', stroke: '#71717a', text: '#ffffff' },
+    taken:    { fill: '#ef4444', stroke: '#b91c1c', text: '#ffffff' },   // reserved = red
     unfit:    { fill: '#22c55e', stroke: '#15803d', text: '#ffffff', faded: true },
     closed:   { fill: '#d4d4d8', stroke: '#a1a1aa', text: '#52525b', dashed: true },
     plain:    { fill: 'rgb(var(--c-surface))', stroke: 'rgb(var(--c-edge) / .35)', text: 'rgb(var(--c-ink))' },
@@ -64,6 +64,25 @@
     return out;
   }
 
+  // Smashed Burger's room, from the owner's top-down sketch (inside: T1–T9, outside: T10–T15).
+  // Replace with the real top-down picture later (opts.background) — the tables stay where they are.
+  const ROOM = [
+    { kind: 'wall', type: 'rect', x: 0, y: 0, w: 760, h: 900 },
+    { kind: 'counter', type: 'cashier', x: 470, y: 0, w: 290, h: 240, label: 'cashier' },
+    { kind: 'room', type: 'rect', x: 0, y: 0, w: 170, h: 150, label: 'wc' },
+    { kind: 'counter', type: 'rect', x: 0, y: 200, w: 60, h: 170, label: 'drinks', labelX: 75, labelY: 290, anchor: 'start' },
+    { kind: 'door', type: 'rect', x: 405, y: 878, w: 90, h: 44, label: 'entrance' },
+    { kind: 'outside', type: 'ellipse', cx: 400, cy: 1120, rx: 500, ry: 205, label: 'outdoor' },
+  ];
+  function roomBounds(decor) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    decor.forEach((d) => {
+      if (d.type === 'ellipse') { x0 = Math.min(x0, d.cx - d.rx); y0 = Math.min(y0, d.cy - d.ry); x1 = Math.max(x1, d.cx + d.rx); y1 = Math.max(y1, d.cy + d.ry); }
+      else { x0 = Math.min(x0, d.x); y0 = Math.min(y0, d.y); x1 = Math.max(x1, d.x + d.w); y1 = Math.max(y1, d.y + d.h); }
+    });
+    return { x0, y0, x1, y1 };
+  }
+
   function el(name, attrs, parent) {
     const e = document.createElementNS(NS, name);
     for (const k in attrs) if (attrs[k] !== undefined && attrs[k] !== null) e.setAttribute(k, attrs[k]);
@@ -72,7 +91,9 @@
   }
 
   function create(container, opts = {}) {
-    const labels = Object.assign({ indoor: 'Indoor', outdoor: 'Outdoor', window: 'Window', family: 'Family', seats: 'seats' }, opts.labels || {});
+    const labels = Object.assign({ indoor: 'Indoor', outdoor: 'Outdoor', window: 'Window', family: 'Family', seats: 'seats',
+      reserved: 'Reserved', cashier: 'Cashier', wc: 'WC', drinks: 'Drinks & sauces', entrance: 'Entrance' }, opts.labels || {});
+    const decor = opts.decor === false ? [] : (opts.decor || ROOM);
     let tables = [], combos = [], states = {}, badges = {};
     let view = { x: -PAD, y: -PAD, w: W + PAD * 2, h: H + PAD * 2 };
 
@@ -108,6 +129,7 @@
       if (!tables.length) { view = { x: -PAD, y: -PAD, w: W + PAD * 2, h: H + PAD * 2 }; applyView(); return; }
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       tables.forEach((t) => { const b = bodySize(t); const m = Math.max(b.w, b.h) / 2 + 40; x0 = Math.min(x0, t.x - m); y0 = Math.min(y0, t.y - m); x1 = Math.max(x1, +t.x + m); y1 = Math.max(y1, +t.y + m); });
+      if (decor.length) { const r = roomBounds(decor); x0 = Math.min(x0, r.x0 - 20); y0 = Math.min(y0, r.y0 - 20); x1 = Math.max(x1, r.x1 + 20); y1 = Math.max(y1, r.y1 + 20); }
       const rect = container.getBoundingClientRect();
       const aspect = rect.width && rect.height ? rect.width / rect.height : W / H;
       let w = x1 - x0, h = y1 - y0;
@@ -120,13 +142,43 @@
       return { x: view.x + ((clientX - r.left) / r.width) * view.w, y: view.y + ((clientY - r.top) / r.height) * view.h };
     }
 
+    // Walls, counters, WC, entrance and the outside area (drawn under the tables)
+    function drawRoom() {
+      const label = (d, x, y, opt = {}) => {
+        if (!d.label) return;
+        const tx = el('text', { x, y, 'text-anchor': opt.anchor || 'middle', 'dominant-baseline': 'middle', 'font-size': opt.size || 17, 'font-weight': 800, fill: opt.fill || 'rgb(var(--c-muted))', 'letter-spacing': '.04em' }, layer);
+        tx.textContent = (labels[d.label] || d.label).toUpperCase();
+      };
+      decor.filter((d) => d.kind === 'outside').forEach((d) => {
+        el('ellipse', { cx: d.cx, cy: d.cy, rx: d.rx, ry: d.ry, fill: 'rgba(34,197,94,.08)', stroke: 'rgba(34,197,94,.55)', 'stroke-width': 3, 'stroke-dasharray': '10 8' }, layer);
+        label(d, d.cx - d.rx + 90, d.cy - d.ry + 45, { fill: 'rgba(22,163,74,.95)', anchor: 'start' });
+      });
+      decor.filter((d) => d.kind === 'wall').forEach((d) => {
+        el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: 6, fill: 'rgb(var(--c-surface-alt) / .6)', stroke: 'rgb(var(--c-edge) / .55)', 'stroke-width': 8 }, layer);
+      });
+      decor.filter((d) => d.kind !== 'wall' && d.kind !== 'outside').forEach((d) => {
+        if (d.type === 'cashier') {
+          // Curved cashier counter in the corner
+          el('path', { d: `M ${d.x} ${d.y} L ${d.x} ${d.y + d.h * 0.35} Q ${d.x + d.w * 0.15} ${d.y + d.h} ${d.x + d.w} ${d.y + d.h} L ${d.x + d.w} ${d.y} Z`, fill: 'rgba(196,69,58,.10)', stroke: 'rgba(196,69,58,.6)', 'stroke-width': 4 }, layer);
+          label(d, d.x + d.w * 0.6, d.y + d.h * 0.42, { fill: 'rgba(196,69,58,.95)' });
+        } else if (d.kind === 'door') {
+          el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: 6, fill: 'rgb(var(--c-surface))', stroke: '#e11d74', 'stroke-width': 4 }, layer);
+          label(d, d.x + d.w / 2, d.y + d.h + 26, { size: 14, fill: '#e11d74' });
+        } else {
+          el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: 6, fill: d.kind === 'counter' ? 'rgba(245,179,1,.14)' : 'rgb(var(--c-surface))', stroke: d.kind === 'counter' ? 'rgba(180,83,9,.6)' : 'rgb(var(--c-edge) / .4)', 'stroke-width': 4 }, layer);
+          label(d, d.labelX != null ? d.labelX : d.x + d.w / 2, d.labelY != null ? d.labelY : d.y + d.h / 2, { size: 15, anchor: d.anchor, fill: d.kind === 'counter' ? 'rgba(180,83,9,.95)' : undefined });
+        }
+      });
+    }
+
     function draw() {
       layer.innerHTML = '';
-      // Floor
-      el('rect', { x: -PAD + 10, y: -PAD + 10, width: W + PAD * 2 - 20, height: H + PAD * 2 - 20, rx: 28, fill: 'rgb(var(--c-surface-alt) / .55)', stroke: 'rgb(var(--c-edge) / .12)', 'stroke-width': 3 }, layer);
+      if (decor.length) drawRoom();
+      else el('rect', { x: -PAD + 10, y: -PAD + 10, width: W + PAD * 2 - 20, height: H + PAD * 2 - 20, rx: 28, fill: 'rgb(var(--c-surface-alt) / .55)', stroke: 'rgb(var(--c-edge) / .12)', 'stroke-width': 3 }, layer);
 
-      // Zone areas with labels (drawn behind the tables)
+      // Zone areas with labels (only without a room drawing — the room already shows inside/outside)
       const zones = {};
+      if (!decor.length)
       tables.forEach((t) => {
         const b = bodySize(t), m = Math.max(b.w, b.h) / 2 + 30;
         const z = zones[t.zone] || (zones[t.zone] = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity });
@@ -175,7 +227,7 @@
         const num = el('text', { y: -2, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': 24, 'font-weight': 900, fill: c.text, 'font-family': '"Playfair Display", Georgia, serif' }, g);
         num.textContent = t.number;
         const seat = el('text', { y: 18, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700, fill: c.text, opacity: 0.9 }, g);
-        seat.textContent = t.seats + ' ' + labels.seats;
+        seat.textContent = st === 'taken' ? labels.reserved : t.seats + ' ' + labels.seats;
         if (badges[t.id]) {
           const by = -(Math.max(b.w, b.h) / 2) - 34;
           el('rect', { x: -32, y: by - 13, width: 64, height: 24, rx: 12, fill: '#18181b' }, g);
@@ -223,8 +275,8 @@
         const p = toPlan(e.clientX, e.clientY);
         gesture.t.x = Math.round((gesture.ox + p.x - gesture.start.x) / 10) * 10;
         gesture.t.y = Math.round((gesture.oy + p.y - gesture.start.y) / 10) * 10;
-        gesture.t.x = Math.min(W, Math.max(0, gesture.t.x));
-        gesture.t.y = Math.min(H, Math.max(0, gesture.t.y));
+        gesture.t.x = Math.min(1400, Math.max(-400, gesture.t.x));
+        gesture.t.y = Math.min(1600, Math.max(-200, gesture.t.y));
         const g = layer.querySelector('[data-tid="' + gesture.t.id + '"]');
         if (g) g.setAttribute('transform', `translate(${gesture.t.x} ${gesture.t.y})`);
       } else if (gesture.kind === 'pan' && gesture.moved) {

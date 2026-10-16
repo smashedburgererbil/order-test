@@ -35,6 +35,7 @@
       rsCombos: 'Tables that can be pushed together', rsCombine: 'Combine tables', rsCombineHelp: 'Tap 2 or more tables, then Save combination.',
       rsSaveCombo: 'Save combination', rsSaveLayout: 'Save floor plan', rsUnsaved: 'Save new tables first, then combine them',
       rsMonthBookings: 'Bookings this month', rsNoShowRate: 'No-show rate', rsBusiest: 'Busiest times', rsTopTables: 'Most booked tables', rsGuests: 'Guests',
+      fpCashier: 'Cashier', fpWc: 'WC', fpDrinks: 'Drinks & sauces', fpEntrance: 'Entrance', fpReserved: 'Reserved',
       rsWaReminder: 'Hello {name}, this is Smashed Burger. A reminder of your table for {people} today at {time}. See you soon! 🍔',
     },
     ku: {
@@ -62,6 +63,7 @@
       rsCombos: 'مێزانەی دەتوانرێت پێکەوە بلکێنرێن', rsCombine: 'لکاندنی مێزەکان', rsCombineHelp: '٢ مێز یان زیاتر دابگرە، پاشان «پاشەکەوتکردنی لکاندن».',
       rsSaveCombo: 'پاشەکەوتکردنی لکاندن', rsSaveLayout: 'پاشەکەوتکردنی نەخشە', rsUnsaved: 'سەرەتا مێزە نوێیەکان پاشەکەوت بکە، پاشان بیانلکێنە',
       rsMonthBookings: 'حیجزەکانی ئەم مانگە', rsNoShowRate: 'ڕێژەی نەهاتن', rsBusiest: 'قەرەباڵغترین کاتەکان', rsTopTables: 'زۆرترین مێزی حیجزکراو', rsGuests: 'میوان',
+      fpCashier: 'کاشێر', fpWc: 'تەوالێت', fpDrinks: 'خواردنەوە و سۆس', fpEntrance: 'دەروازە', fpReserved: 'حیجزکراو',
       rsWaReminder: 'سڵاو {name}، ئێمە سماشد بەرگەرین. بیرخستنەوەی مێزەکەت بۆ {people} کەس ئەمڕۆ کاتژمێر {time}. بەخێربێیت! 🍔',
     },
     ar: {
@@ -89,6 +91,7 @@
       rsCombos: 'طاولات يمكن دمجها', rsCombine: 'دمج الطاولات', rsCombineHelp: 'اضغط على طاولتين أو أكثر، ثم «حفظ الدمج».',
       rsSaveCombo: 'حفظ الدمج', rsSaveLayout: 'حفظ المخطط', rsUnsaved: 'احفظ الطاولات الجديدة أولاً ثم ادمجها',
       rsMonthBookings: 'حجوزات هذا الشهر', rsNoShowRate: 'نسبة عدم الحضور', rsBusiest: 'أكثر الأوقات ازدحاماً', rsTopTables: 'أكثر الطاولات حجزاً', rsGuests: 'الضيوف',
+      fpCashier: 'الكاشير', fpWc: 'الحمّام', fpDrinks: 'العصائر والصوصات', fpEntrance: 'المدخل', fpReserved: 'محجوزة',
       rsWaReminder: 'مرحباً {name}، معك سماشد برجر. تذكير بطاولتك لـ {people} أشخاص اليوم الساعة {time}. بانتظارك! 🍔',
     },
   };
@@ -269,7 +272,7 @@
       (done.length ? '<div class="mt-6 grid gap-3 opacity-80 md:grid-cols-2 xl:grid-cols-3">' + done.map(card).join('') + '</div>' : '');
     const box = document.getElementById('rsMiniPlan');
     if (box) {
-      const plan = FloorPlan.create(box, { labels: { indoor: t('zIndoor'), outdoor: t('zOutdoor'), window: t('zWindow'), family: t('zFamily'), seats: t('rsSeats').toLowerCase() } });
+      const plan = FloorPlan.create(box, { labels: { indoor: t('zIndoor'), outdoor: t('zOutdoor'), window: t('zWindow'), family: t('zFamily'), seats: t('rsSeats').toLowerCase(), reserved: t('fpReserved'), cashier: t('fpCashier'), wc: t('fpWc'), drinks: t('fpDrinks'), entrance: t('fpEntrance') } });
       plan.setTables(RS.tables, RS.combos);
       const soon = Date.now() + 2 * 3600 * 1000, past = Date.now() - 30 * 60 * 1000;
       const states = {}, badges = {};
@@ -418,7 +421,7 @@
     $('sheetPanel').classList.add('sm:max-w-5xl');
     const plan = FloorPlan.create(document.getElementById('lyPlan'), {
       editable: true,
-      labels: { indoor: t('zIndoor'), outdoor: t('zOutdoor'), window: t('zWindow'), family: t('zFamily'), seats: t('rsSeats').toLowerCase() },
+      labels: { indoor: t('zIndoor'), outdoor: t('zOutdoor'), window: t('zWindow'), family: t('zFamily'), seats: t('rsSeats').toLowerCase(), reserved: t('fpReserved'), cashier: t('fpCashier'), wc: t('fpWc'), drinks: t('fpDrinks'), entrance: t('fpEntrance') },
       onTap: (id) => {
         if (L.combine) {
           if (id == null) return;

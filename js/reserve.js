@@ -38,6 +38,8 @@
       rsvErrBlocked: 'Online booking isn\'t available for this number — please call the restaurant.', rsvErrGeneric: 'Couldn\'t reserve right now. Check your internet and try again.',
       rsvOff: 'Online reservations are paused right now — please call the restaurant.',
       rsvWhenLabel: 'When', rsvWhoLabel: 'Guests', rsvWhereLabel: 'Table', rsvFor: 'for',
+      rsvTakenTap: 'Table {n} is already reserved at this time — you cannot book it. Please choose a green table.',
+      fpCashier: 'Cashier', fpWc: 'WC', fpDrinks: 'Drinks & sauces', fpEntrance: 'Entrance',
     },
     ar: {
       rsvButton: 'احجز طاولة', rsvTitle: 'احجز طاولة', rsvWhen: 'متى ستأتي؟', rsvPeople: 'الأشخاص',
@@ -63,6 +65,8 @@
       rsvErrBlocked: 'الحجز عبر الإنترنت غير متاح لهذا الرقم — يرجى الاتصال بالمطعم.', rsvErrGeneric: 'تعذّر الحجز الآن. تحقق من الإنترنت وحاول مرة أخرى.',
       rsvOff: 'الحجز عبر الإنترنت متوقف حالياً — يرجى الاتصال بالمطعم.',
       rsvWhenLabel: 'الموعد', rsvWhoLabel: 'الضيوف', rsvWhereLabel: 'الطاولة', rsvFor: 'لـ',
+      rsvTakenTap: 'الطاولة {n} محجوزة في هذا الوقت — لا يمكنك حجزها. يرجى اختيار طاولة خضراء.',
+      fpCashier: 'الكاشير', fpWc: 'الحمّام', fpDrinks: 'العصائر والصوصات', fpEntrance: 'المدخل',
     },
     ku: {
       rsvButton: 'حیجزکردنی مێز', rsvTitle: 'حیجزکردنی مێز', rsvWhen: 'کەی دێیت؟', rsvPeople: 'کەس',
@@ -88,6 +92,8 @@
       rsvErrBlocked: 'حیجزی ئۆنلاین بۆ ئەم ژمارەیە بەردەست نییە — تکایە پەیوەندی بە چێشتخانەوە بکە.', rsvErrGeneric: 'ئێستا نەتوانرا حیجز بکرێت. ئینتەرنێتەکەت بپشکنە و دووبارە هەوڵ بدەرەوە.',
       rsvOff: 'حیجزی ئۆنلاین ئێستا ڕاگیراوە — تکایە پەیوەندی بە چێشتخانەوە بکە.',
       rsvWhenLabel: 'کات', rsvWhoLabel: 'میوان', rsvWhereLabel: 'مێز', rsvFor: 'بۆ',
+      rsvTakenTap: 'مێزی {n} لەم کاتەدا حیجزکراوە — ناتوانیت حیجزی بکەیت. تکایە مێزێکی سەوز هەڵبژێرە.',
+      fpCashier: 'کاشێر', fpWc: 'تەوالێت', fpDrinks: 'خواردنەوە و سۆس', fpEntrance: 'دەروازە',
     },
   };
   for (const l of Object.keys(TXT)) Object.assign(I18N[l], TXT[l]);
@@ -138,6 +144,9 @@
     '</div>';
   document.body.appendChild(root);
   const panel = () => document.getElementById('rsvPanel');
+  // Messages must show above the booking panel and the order tracker
+  const toastEl = document.getElementById('toast');
+  if (toastEl) toastEl.style.zIndex = '130';
 
   function open() {
     root.classList.remove('hidden');
@@ -268,7 +277,7 @@
     if (!R.avail || !R.avail.ok || id == null) return;
     const info = R.avail.tables.find((x) => x.id === id);
     if (!info) return;
-    if (!info.free) { showToast(L('rsvTaken')); return; }
+    if (!info.free) { showToast(L('rsvTakenTap').replace('{n}', info.number)); return; }
     if (!info.fits) {
       // A small table may still work as part of a free combo
       const combo = R.avail.combos.find((c) => c.free && c.fits && c.table_ids.includes(id));
@@ -293,7 +302,7 @@
           '<div id="rsvPlan" class="mx-4 mt-3 h-[44vh] min-h-[260px] rounded-3xl bg-surfaceAlt/50 ring-1 ring-edge/5"></div>' +
           '<div class="mt-2 flex flex-wrap items-center justify-center gap-3 px-4 text-[11px] font-semibold text-muted">' +
             '<span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-full bg-[#22c55e]"></span>' + esc(L('rsvFree')) + '</span>' +
-            '<span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-full bg-[#a1a1aa]"></span>' + esc(L('rsvTaken')) + '</span>' +
+            '<span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-full bg-[#ef4444]"></span>' + esc(L('rsvTaken')) + '</span>' +
             '<span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-full bg-[#f5b301]"></span>' + esc(L('rsvSelected')) + '</span>' +
           '</div>' +
           '<div id="rsvTableInfo" class="px-4 pb-4"></div>' +
@@ -301,7 +310,8 @@
         footer('<div id="rsvTableNext"></div>');
       R.plan = FloorPlan.create(document.getElementById('rsvPlan'), {
         onTap: onTableTap, ariaLabel: L('rsvChooseTable'),
-        labels: { indoor: L('zoneIndoor'), outdoor: L('zoneOutdoor'), window: L('zoneWindow'), family: L('zoneFamily'), seats: L('rsvSeats') },
+        labels: { indoor: L('zoneIndoor'), outdoor: L('zoneOutdoor'), window: L('zoneWindow'), family: L('zoneFamily'), seats: L('rsvSeats'),
+          reserved: L('rsvTaken'), cashier: L('fpCashier'), wc: L('fpWc'), drinks: L('fpDrinks'), entrance: L('fpEntrance') },
       });
       R.plan.setTables(R.cfg.tables, R.cfg.combos);
     }
