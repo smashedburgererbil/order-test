@@ -265,6 +265,25 @@
     return st;
   }
 
+  // Easy alternative to tapping the drawing: every free table that fits, as a big button, grouped inside / outside
+  function freeList() {
+    if (!R.avail || !R.avail.ok) return '';
+    const fits = R.avail.tables.filter((x) => x.free && x.fits);
+    if (!fits.length) return '';
+    return [['indoor', 'window', 'family'], ['outdoor']].map((zs) => {
+      const list = fits.filter((x) => zs.includes(x.zone));
+      if (!list.length) return '';
+      return '<p class="mt-3 text-[11px] font-bold uppercase tracking-wide text-muted">' + esc(L(ZONE[zs[0]])) + '</p>' +
+        '<div class="mt-1.5 grid grid-cols-4 gap-2">' + list.map((x) => {
+          const on = Array.isArray(R.pick) && R.pick.length === 1 && R.pick[0] === x.id;
+          return '<button type="button" data-rsv-table="' + x.id + '" class="flex flex-col items-center rounded-2xl py-2.5 ring-1 transition active:scale-95 ' +
+            (on ? 'bg-[#f5b301] text-zinc-900 ring-[#f5b301] shadow-glow' : 'bg-[#22c55e]/10 ring-[#22c55e]/40 hover:ring-[#22c55e]') + '">' +
+            '<span class="tnum font-display text-xl leading-none">' + x.number + '</span>' +
+            '<span class="mt-1 text-[10px] font-semibold ' + (on ? '' : 'text-muted') + '">' + x.seats + ' ' + esc(L('rsvSeats')) + '</span></button>';
+        }).join('') + '</div>';
+    }).join('');
+  }
+
   function pickLabel() {
     if (!R.pick) return null;
     if (R.pick === 'any') return L('rsvAnyTable');
@@ -299,7 +318,7 @@
           '<div class="px-4">' + stepDots(2) +
             '<p class="mt-3 text-sm text-muted"><span class="font-bold text-ink" dir="ltr">' + esc(fdate(new Date(R.date + 'T12:00:00Z'), { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })) + ' · ' + hm(R.minute) + '</span> · ' + R.party + ' ' + esc(L('rsvPeople')) + '</p>' +
           '</div>' +
-          '<div id="rsvPlan" class="mx-4 mt-3 h-[44vh] min-h-[260px] rounded-3xl bg-surfaceAlt/50 ring-1 ring-edge/5"></div>' +
+          '<div id="rsvPlan" class="mx-4 mt-3 h-[56vh] min-h-[340px] rounded-3xl bg-surfaceAlt/50 ring-1 ring-edge/5"></div>' +
           '<div class="mt-2 flex flex-wrap items-center justify-center gap-3 px-4 text-[11px] font-semibold text-muted">' +
             '<span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-full bg-[#22c55e]"></span>' + esc(L('rsvFree')) + '</span>' +
             '<span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-full bg-[#ef4444]"></span>' + esc(L('rsvTaken')) + '</span>' +
@@ -321,7 +340,8 @@
       '<div class="mt-3 rounded-2xl p-3 text-sm ring-1 ' + (label ? 'bg-[#f5b301]/10 ring-[#f5b301]/40' : 'bg-surfaceAlt ring-edge/5') + '">' +
         (label ? '<p class="flex items-center gap-2 font-bold"><i data-lucide="armchair" class="h-4 w-4 text-[#b45309]"></i>' + esc(label) + '</p>' : '<p class="text-muted">' + esc(L('rsvTapTable')) + '</p>') +
       '</div>' +
-      '<button type="button" data-rsv-any class="mt-2 flex w-full items-center gap-3 rounded-2xl p-3 text-start ring-1 transition active:scale-[.99] ' + (anyOn ? 'bg-[#f5b301]/15 ring-[#f5b301]' : 'bg-surfaceAlt ring-edge/5 hover:ring-brand/40') + '">' +
+      freeList() +
+      '<button type="button" data-rsv-anyclass="mt-2 flex w-full items-center gap-3 rounded-2xl p-3 text-start ring-1 transition active:scale-[.99] ' + (anyOn ? 'bg-[#f5b301]/15 ring-[#f5b301]' : 'bg-surfaceAlt ring-edge/5 hover:ring-brand/40') + '">' +
         '<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl ' + (anyOn ? 'bg-[#f5b301] text-zinc-900' : 'bg-brand/10 text-brand') + '"><i data-lucide="sparkles" class="h-5 w-5"></i></span>' +
         '<span><span class="block text-sm font-bold">' + esc(L('rsvAnyTable')) + '</span><span class="block text-[11px] text-muted">' + esc(L('rsvAnyTableSub')) + '</span></span>' +
       '</button>' +
@@ -514,6 +534,7 @@
       return;
     }
     if (b('[data-rsv-any]')) { R.pick = 'any'; renderTable(); return; }
+    if ((x = b('[data-rsv-table]'))) { onTableTap(+x.getAttribute('data-rsv-table')); return; }
     if ((x = b('[data-rsv-combo]'))) { R.pick = x.getAttribute('data-rsv-combo').split(',').map(Number); renderTable(); return; }
     if ((x = b('[data-rsv-chip]'))) {
       const n = $('rsvNote');

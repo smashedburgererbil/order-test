@@ -29,10 +29,10 @@
 
   // Table body size from its shape and seat count
   function bodySize(t) {
-    if (t.shape === 'round') { const r = 24 + Math.min(t.seats, 10) * 3; return { w: r * 2, h: r * 2, r }; }
-    if (t.shape === 'square') { const s = t.seats <= 4 ? 70 : 90; return { w: s, h: s }; }
+    if (t.shape === 'round') { const r = 34 + Math.min(t.seats, 10) * 3; return { w: r * 2, h: r * 2, r }; }
+    if (t.shape === 'square') { const s = t.seats <= 4 ? 92 : 112; return { w: s, h: s }; }
     const perSide = Math.ceil(t.seats / 2);
-    return { w: Math.max(80, 30 + perSide * 36), h: 70 };
+    return { w: Math.max(100, 40 + perSide * 40), h: 88 };
   }
 
   // Chair positions around a table (relative to its centre)
@@ -67,12 +67,12 @@
   // Smashed Burger's room, from the owner's top-down sketch (inside: T1–T9, outside: T10–T15).
   // Replace with the real top-down picture later (opts.background) — the tables stay where they are.
   const ROOM = [
-    { kind: 'wall', type: 'rect', x: 0, y: 0, w: 760, h: 900 },
+    { kind: 'wall', type: 'rect', x: 0, y: 0, w: 780, h: 900, label: 'indoor' },
     { kind: 'counter', type: 'cashier', x: 470, y: 0, w: 290, h: 240, label: 'cashier' },
     { kind: 'room', type: 'rect', x: 0, y: 0, w: 170, h: 150, label: 'wc' },
     { kind: 'counter', type: 'rect', x: 0, y: 200, w: 60, h: 170, label: 'drinks', labelX: 75, labelY: 290, anchor: 'start' },
     { kind: 'door', type: 'rect', x: 405, y: 878, w: 90, h: 44, label: 'entrance' },
-    { kind: 'outside', type: 'ellipse', cx: 400, cy: 1120, rx: 500, ry: 205, label: 'outdoor' },
+    { kind: 'outside', type: 'rect', x: 20, y: 950, w: 760, h: 390, label: 'outdoor' },
   ];
   function roomBounds(decor) {
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -150,11 +150,12 @@
         tx.textContent = (labels[d.label] || d.label).toUpperCase();
       };
       decor.filter((d) => d.kind === 'outside').forEach((d) => {
-        el('ellipse', { cx: d.cx, cy: d.cy, rx: d.rx, ry: d.ry, fill: 'rgba(34,197,94,.08)', stroke: 'rgba(34,197,94,.55)', 'stroke-width': 3, 'stroke-dasharray': '10 8' }, layer);
-        label(d, d.cx - d.rx + 90, d.cy - d.ry + 45, { fill: 'rgba(22,163,74,.95)', anchor: 'start' });
+        el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: 36, fill: 'rgba(34,197,94,.08)', stroke: 'rgba(34,197,94,.45)', 'stroke-width': 3, 'stroke-dasharray': '12 10' }, layer);
+        label(d, d.x + 24, d.y + d.h - 22, { fill: 'rgba(22,163,74,.95)', anchor: 'start', size: 20 });
       });
       decor.filter((d) => d.kind === 'wall').forEach((d) => {
-        el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: 6, fill: 'rgb(var(--c-surface-alt) / .6)', stroke: 'rgb(var(--c-edge) / .55)', 'stroke-width': 8 }, layer);
+        el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: 28, fill: 'rgb(var(--c-surface-alt) / .55)', stroke: 'rgb(var(--c-edge) / .35)', 'stroke-width': 5 }, layer);
+        label(d, d.x + 24, d.y + d.h - 26, { fill: 'rgb(var(--c-muted))', anchor: 'start', size: 20 });
       });
       decor.filter((d) => d.kind !== 'wall' && d.kind !== 'outside').forEach((d) => {
         if (d.type === 'cashier') {
@@ -224,9 +225,9 @@
           void ring;
         }
         // Number + seats (text stays upright even on rotated tables)
-        const num = el('text', { y: -2, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': 24, 'font-weight': 900, fill: c.text, 'font-family': '"Playfair Display", Georgia, serif' }, g);
+        const num = el('text', { y: -2, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': 34, 'font-weight': 900, fill: c.text, 'font-family': '"Playfair Display", Georgia, serif' }, g);
         num.textContent = t.number;
-        const seat = el('text', { y: 18, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700, fill: c.text, opacity: 0.9 }, g);
+        const seat = el('text', { y: 24, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 700, fill: c.text, opacity: 0.9 }, g);
         seat.textContent = st === 'taken' ? labels.reserved : t.seats + ' ' + labels.seats;
         if (badges[t.id]) {
           const by = -(Math.max(b.w, b.h) / 2) - 34;
