@@ -31,7 +31,7 @@ self.addEventListener('notificationclick', (event) => {
   let target = new URL('menu.html', self.registration.scope).href;
   try {
     const u = new URL(event.notification.data.url);
-    target = new URL('menu.html' + u.search, self.registration.scope).href;
+    target = new URL((/staff\.html$/.test(u.pathname) ? 'staff.html' : 'menu.html') + u.search, self.registration.scope).href;
   } catch { /* use the plain menu */ }
   event.waitUntil((async () => {
     const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });

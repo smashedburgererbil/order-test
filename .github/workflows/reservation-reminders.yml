@@ -13,3 +13,7 @@ jobs:
         run: |
           curl -s -X POST -H "Content-Type: application/json" -d '{"action":"reminders"}' \
             "https://zrmnxtcxibpwxssurelk.supabase.co/functions/v1/reservation-push"
+      - name: Owner alerts for low ratings (backup)
+        run: |
+          curl -s -X POST -H "Content-Type: application/json" -d '{}' \
+            "https://zrmnxtcxibpwxssurelk.supabase.co/functions/v1/feedback-alert"
