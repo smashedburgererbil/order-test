@@ -273,6 +273,10 @@
   }
   .group:hover .item-media img { transform: scale(1.05); }
 
+  /* ── Offers slider ── */
+  .offer-track { transition: transform .45s cubic-bezier(.22,1,.36,1); }
+  @media (prefers-reduced-motion: reduce) { .offer-track { transition: none; } }
+
   /* ── Sold out: faded photo + a sticker in the top corner (end side → top-left in Arabic/Kurdish) ── */
   .is-soldout > img { filter: grayscale(.7); opacity: .75; }
   .group:hover .item-media.is-soldout > img { transform: none; }
@@ -622,6 +626,7 @@
 
 <!-- =============================== MAIN =============================== -->
 <main class="mx-auto max-w-6xl px-4 pb-10 pt-5">
+  <button type="button" id="offerBanner" class="mb-4 hidden w-full items-center gap-3 rounded-2xl bg-gradient-to-r from-brand to-brandDark px-3 py-2 text-start text-white shadow-glow ring-1 ring-brand/30 transition active:scale-[.99]"></button>
 
   <section class="mb-8">
     <div class="mb-6 text-center">
@@ -660,6 +665,9 @@
     <p id="emptyTitle" class="mt-4 font-display text-lg">Nothing matches that</p>
     <p id="emptyHint" class="mt-1 text-sm text-muted">Try a different search or category.</p>
   </div>
+
+  <!-- Offers (filled by js/offers.js; hidden when no offer is running) -->
+  <section id="offersSection" class="mt-10 hidden scroll-mt-24"></section>
 
   <section class="mt-10 overflow-hidden rounded-3xl bg-gradient-to-br from-brand via-brandDark to-brandDeeper text-white shadow-glow ring-1 ring-brand/30">
     <div class="relative px-6 py-8 sm:px-10 sm:py-10">
@@ -2017,7 +2025,9 @@ function renderItemMedia(item, opts) {
   const soldOut = !item.available;
   const showPlus = !(opts && opts.hidePlus) && !soldOut;
   const mediaCls = 'item-media' + (soldOut ? ' is-soldout' : '');
-  const sticker = soldOut ? soldOutSticker() : '';
+  const offer = !soldOut && window.offerFor ? window.offerFor(item) : null;
+  const sticker = soldOut ? soldOutSticker()
+    : offer ? '<span class="absolute top-2 end-2 z-10 rounded-full bg-brand px-2 py-0.5 text-[11px] font-extrabold text-white shadow-glow ring-1 ring-white/30" dir="ltr">−' + offer.percent + '%</span>' : '';
 
   const tagPills = showTags ? item.tags.slice(0, 2).map((k) => {
     const s = TAG_STYLES[k];
@@ -2059,7 +2069,12 @@ function renderCard(item) {
     '<div class="flex flex-1 flex-col gap-1 p-3">' +
       '<h3 class="line-clamp-2 text-sm font-semibold leading-tight ' + (soldOut ? 'text-muted' : 'text-ink') + '">' + esc(tx(item.name)) + '</h3>' +
       (soldOut ? '<p class="text-[11px] font-bold leading-none text-brand">' + esc(t('soldOutLabel')) + '</p>' : '') +
-      '<p class="tnum mt-auto pt-1 text-sm font-bold ' + (soldOut ? 'text-muted line-through decoration-2' : 'text-brand') + '">' + esc(formatPrice(item.price)) + '</p>' +
+      (function () {
+        const offer = !soldOut && window.offerFor ? window.offerFor(item) : null;
+        if (!offer) return '<p class="tnum mt-auto pt-1 text-sm font-bold ' + (soldOut ? 'text-muted line-through decoration-2' : 'text-brand') + '">' + esc(formatPrice(item.price)) + '</p>';
+        return '<p class="tnum mt-auto flex flex-wrap items-baseline gap-x-1.5 pt-1"><span class="text-sm font-bold text-brand">' + esc(formatPrice(window.offerPreview(item.price, offer.percent))) + '</span>' +
+          '<span class="text-[11px] text-muted line-through">' + esc(formatPrice(item.price)) + '</span></p>';
+      })() +
     '</div>' +
   '</button>';
 }
@@ -2915,6 +2930,7 @@ window.addEventListener('load', refreshIcons);
 <!-- Order system (instead of WhatsApp ordering) -->
 <script src="js/config.js"></script>
 <script src="js/ordering.js"></script>
+<script src="js/offers.js"></script>
 <!-- Table reservations -->
 <script src="js/floorplan.js"></script>
 <script src="js/reserve.js"></script>

@@ -223,6 +223,7 @@
       })
       .catch(() => {});
   }
+  window.refreshAvailability = loadAvailability;   // used by the live feed in offers.js
   loadAvailability();
   setInterval(() => { if (document.visibilityState === 'visible') loadAvailability(); }, 10000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') loadAvailability(); });

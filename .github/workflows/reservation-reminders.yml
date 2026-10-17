@@ -17,3 +17,6 @@ jobs:
         run: |
           curl -s -X POST -H "Content-Type: application/json" -d '{}' \
             "https://zrmnxtcxibpwxssurelk.supabase.co/functions/v1/feedback-alert"
+      - name: Owner alerts for offers started by cashiers (backup)
+        run: |
+          curl -s -X POST -H "Content-Type: application/json" -d '{}'             "https://zrmnxtcxibpwxssurelk.supabase.co/functions/v1/offer-alert"

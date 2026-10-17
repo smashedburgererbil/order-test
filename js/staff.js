@@ -951,7 +951,7 @@ function openMenuSheet() {
     '<div class="space-y-2 overflow-y-auto px-5 py-4">' +
       row('today', 'bar-chart-3', 'today', !admin) +
       row('sales', 'calendar-days', 'monthlySales', !admin) +
-      row('soldout', 'package-x', 'soldOut', !admin) +
+      row('soldout', 'package-x', 'soldOut', false) +   // cashiers too (needs database update 010)
       row('staff', 'users', 'staffAccounts', !admin) +
       row('password', 'key-round', 'changePassword', false) +
       '<button type="button" data-open="signout" class="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-start text-sm font-semibold text-brand transition hover:bg-brand/5">' +
@@ -1016,7 +1016,12 @@ function openSoldOut() {
     const next = state.avail[id] === false;
     state.avail[id] = next;
     openSoldOut();
-    const { error } = await sb.from('menu_items').update({ available: next }).eq('id', id);
+    // Through the database function (records who did it). Before database update 010 only the owner's direct update exists.
+    let { error } = await sb.rpc('staff_set_sold_out', { p_item: id, p_sold_out: !next });
+    if (error && /PGRST202|staff_set_sold_out/.test((error.code || '') + (error.message || ''))) {
+      const res = await sb.from('menu_items').update({ available: next }).eq('id', id).select('id');
+      error = res.error || (res.data && res.data.length ? null : { message: 'not allowed' });   // blocked silently → show it failed
+    }
     if (error) { state.avail[id] = !next; openSoldOut(); toast(t('actionFailed')); }
   };
 }
