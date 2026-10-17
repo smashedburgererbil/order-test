@@ -762,7 +762,7 @@
           </p>
           <p class="mt-1 flex items-center gap-2 text-sm text-white">
             <i data-lucide="clock" class="h-4 w-4 shrink-0 text-white"></i>
-            <span class="tnum" dir="ltr">11:30 AM – 12:00 AM</span>
+            <span id="todayHours" class="tnum" dir="ltr">11:30 AM – 12:00 AM</span>
           </p>
 
           <details class="group mt-4 overflow-hidden rounded-2xl bg-white/[.12] ring-1 ring-white/25 backdrop-blur">
@@ -1100,8 +1100,17 @@ const MAX_QTY = 99;
 const STORAGE_KEY = 'smashed-burger.menu.v3';
 
 const STORE_TZ = 'Asia/Baghdad';
-const OPEN_MINUTES_OF_DAY  = 11 * 60 + 30;
-const CLOSE_MINUTES_OF_DAY = 24 * 60;
+// Opening hours per weekday (0 = Sunday … 6 = Saturday), Baghdad time, 24-hour "HH:MM".
+// close '24:00' = midnight at the END of that day · a close earlier than open runs past midnight · null = closed all day
+const HOURS = [
+  { open: '11:30', close: '24:00' }, // Sunday
+  { open: '11:30', close: '24:00' }, // Monday
+  { open: '11:30', close: '24:00' }, // Tuesday
+  { open: '11:30', close: '24:00' }, // Wednesday
+  { open: '11:30', close: '24:00' }, // Thursday
+  { open: '11:30', close: '24:00' }, // Friday
+  { open: '11:30', close: '24:00' }, // Saturday
+];
 
 const STORE = {
   phone:     '+9647508030803',
@@ -1155,7 +1164,7 @@ const I18N = {
     openingHours:'Opening Hours',
     weeklySchedule:'Weekly schedule',
     openNow:'Open Now',
-    closedNow:'Closed',
+    closedNow:'Closed', closesIn:'Closes in', opensIn:'Opens in', cdHours:'Hours', cdMinutes:'Minutes', cdSeconds:'Seconds',
     openDaily:'Open Daily',
     hoursNote:'Times shown in Baghdad local time.',
     addressLine1:'Gulan Street, The Boulevard',
@@ -1196,7 +1205,7 @@ const I18N = {
     openingHours:'ساعات العمل',
     weeklySchedule:'الجدول الأسبوعي',
     openNow:'مفتوح الآن',
-    closedNow:'مغلق',
+    closedNow:'مغلق', closesIn:'يغلق خلال', opensIn:'يفتح خلال', cdHours:'ساعة', cdMinutes:'دقيقة', cdSeconds:'ثانية',
     openDaily:'مفتوح يومياً',
     hoursNote:'الأوقات حسب توقيت بغداد.',
     addressLine1:'شارع كولان، البوليفارد',
@@ -1237,7 +1246,7 @@ const I18N = {
     openingHours:'کاتژمێری کارکردن',
     weeklySchedule:'خشتەی هەفتانە',
     openNow:'ئێستا کراوەیە',
-    closedNow:'داخراوە',
+    closedNow:'داخراوە', closesIn:'دادەخرێت دوای', opensIn:'دەکرێتەوە دوای', cdHours:'کاتژمێر', cdMinutes:'خولەک', cdSeconds:'چرکە',
     openDaily:'ڕۆژانە کراوەیە',
     hoursNote:'کاتەکان بە کاتی بەغدا نیشان دراون.',
     addressLine1:'شەقامی گوڵان، بۆلیڤارد',
@@ -1571,27 +1580,71 @@ function clearCart() {
 
 function getStoreTimeParts() {
   try {
-    const fmt = new Intl.DateTimeFormat('en-US', {
-      timeZone: STORE_TZ,
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: false,
-    });
-    const parts = fmt.formatToParts(new Date());
-    const rawHour = parseInt(parts.find((p) => p.type === 'hour').value, 10);
-    const minute  = parseInt(parts.find((p) => p.type === 'minute').value, 10);
-    const hour = (Number.isFinite(rawHour) ? rawHour : 0) % 24;
-    return { hour, minute: Number.isFinite(minute) ? minute : 0 };
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: STORE_TZ, weekday: 'short', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false,
+    }).formatToParts(new Date());
+    const get = (k) => parts.find((x) => x.type === k).value;
+    return {
+      day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(get('weekday')),
+      hour: parseInt(get('hour'), 10) % 24, minute: parseInt(get('minute'), 10), second: parseInt(get('second'), 10),
+    };
   } catch {
     const d = new Date();
-    return { hour: d.getHours(), minute: d.getMinutes() };
+    return { day: d.getDay(), hour: d.getHours(), minute: d.getMinutes(), second: d.getSeconds() };
   }
 }
 
-function computeIsOpenNow() {
-  const { hour, minute } = getStoreTimeParts();
-  const now = hour * 60 + minute;
-  return now >= OPEN_MINUTES_OF_DAY && now < CLOSE_MINUTES_OF_DAY;
+const hmSecs = (v) => { const [h, m] = v.split(':').map(Number); return (h * 60 + m) * 60; };
+
+// Opening window of a weekday, in seconds from the start of that day (close may pass 86400 = midnight)
+function dayWindow(day) {
+  const h = HOURS[((day % 7) + 7) % 7];
+  if (!h) return null;
+  const open = hmSecs(h.open);
+  let close = hmSecs(h.close);
+  if (close <= open) close += 86400;
+  return { open, close };
+}
+
+// { day, open, secs } — secs = seconds until it closes (if open) or opens (if closed)
+function getStoreStatus() {
+  const p = getStoreTimeParts();
+  const now = p.hour * 3600 + p.minute * 60 + p.second;
+  const y = dayWindow(p.day - 1);
+  if (y && now < y.close - 86400) return { day: p.day, open: true, secs: y.close - 86400 - now };
+  const td = dayWindow(p.day);
+  if (td && now >= td.open && now < td.close) return { day: p.day, open: true, secs: td.close - now };
+  for (let k = 0; k < 8; k++) {
+    const w = dayWindow(p.day + k);
+    if (w && w.open + k * 86400 > now) return { day: p.day, open: false, secs: w.open + k * 86400 - now };
+  }
+  return { day: p.day, open: false, secs: 0 };
+}
+
+function computeIsOpenNow() { return getStoreStatus().open; }
+
+function fmt12(v) {
+  const [h0, m] = v.split(':').map(Number);
+  const h = h0 % 24;
+  return ((h % 12) || 12) + ':' + String(m).padStart(2, '0') + ' ' + (h < 12 ? 'AM' : 'PM');
+}
+function hoursRange(day) { const h = HOURS[day]; return h ? fmt12(h.open) + ' – ' + fmt12(h.close) : t('closedNow'); }
+
+// Runs every second: countdown numbers, "Closes in"/"Opens in", the Open Now badge, and today's row at midnight
+let _hoursDay = null;
+function tickCountdown() {
+  const st = getStoreStatus();
+  if (st.day !== _hoursDay) { renderHoursList(); return; }
+  if (st.open !== state.isOpen) { state.isOpen = st.open; renderOpenStatus(); }
+  const box = $('countdown');
+  if (!box) return;
+  box.hidden = !st.secs;
+  if (!st.secs) return;
+  const two = (n) => String(n).padStart(2, '0');
+  $('cdLabel').textContent = t(st.open ? 'closesIn' : 'opensIn');
+  $('cdH').textContent = two(Math.floor(st.secs / 3600));
+  $('cdM').textContent = two(Math.floor((st.secs % 3600) / 60));
+  $('cdS').textContent = two(st.secs % 60);
 }
 
 function renderOpenStatus() {
@@ -2043,19 +2096,34 @@ function renderHoursList() {
   if (!list) return;
 
   const names = DAY_NAMES[state.locale] || DAY_NAMES.en;
-  const range = '11:30 AM – 12:00 AM';
-  const todayIdx = new Date().getDay();
+  const todayIdx = getStoreTimeParts().day;
+  _hoursDay = todayIdx;
+  if ($('todayHours')) $('todayHours').textContent = hoursRange(todayIdx);
+  const cdBox = (id, key) =>
+    '<div class="rounded-xl bg-white/[.14] px-1 py-1.5 text-center ring-1 ring-white/25">' +
+      '<span id="' + id + '" class="tnum block text-lg font-bold leading-none text-white">00</span>' +
+      '<span class="mt-1 block text-[10px] font-medium leading-none text-white/75">' + esc(t(key)) + '</span>' +
+    '</div>';
 
   list.innerHTML = names.map((name, i) => {
     const isToday = i === todayIdx;
-    return '<li class="flex items-center justify-between gap-3 py-2 ' + (isToday ? 'font-semibold' : '') + '">' +
-      '<span class="flex items-center gap-2 ' + (isToday ? 'text-white' : 'text-white/80') + '">' +
-        (isToday ? '<span class="h-1.5 w-1.5 rounded-full bg-white"></span>' : '') +
-        esc(name) +
-      '</span>' +
-      '<span class="tnum text-white" dir="ltr">' + esc(range) + '</span>' +
+    return '<li class="py-2 ' + (isToday ? 'font-semibold' : '') + '">' +
+      '<div class="flex items-center justify-between gap-3">' +
+        '<span class="flex items-center gap-2 ' + (isToday ? 'text-white' : 'text-white/80') + '">' +
+          (isToday ? '<span class="h-1.5 w-1.5 rounded-full bg-white"></span>' : '') +
+          esc(name) +
+        '</span>' +
+        '<span class="tnum text-white" dir="ltr">' + esc(hoursRange(i)) + '</span>' +
+      '</div>' +
+      (isToday
+        ? '<div id="countdown" class="mt-2">' +
+            '<p id="cdLabel" class="text-[11px] font-medium text-white/80"></p>' +
+            '<div class="mt-1 grid grid-cols-3 gap-2" dir="ltr">' + cdBox('cdH', 'cdHours') + cdBox('cdM', 'cdMinutes') + cdBox('cdS', 'cdSeconds') + '</div>' +
+          '</div>'
+        : '') +
     '</li>';
   }).join('');
+  tickCountdown();
 }
 
 function renderCart() {
@@ -2716,7 +2784,7 @@ function init() {
   renderFloatingBar();
   refreshIcons();
 
-  window.setInterval(refreshOpenStatus, 60_000);
+  window.setInterval(tickCountdown, 1000);
 }
 
 if (document.readyState === 'loading') {
