@@ -11,6 +11,8 @@
 (function () {
   const TXT = {
     en: {
+      ofMenu: 'Offers / Discounts', ofSetupTitle: 'One-time setup needed',
+      ofSetup: 'Offers start working after the owner runs two database updates in Supabase → SQL Editor: 006 first, then 013. You can already look at the form below; “Start offer” unlocks after the setup.',
       ofTitle: 'Offers', ofSub: 'Discounts customers see on the menu, for a set time', ofNew: 'New offer', ofItem: 'Choose an item…',
       ofAddItem: 'Add another item', ofRemove: 'Remove', ofDesc: 'Description (customers see this)', ofDescPh: 'e.g. Lunch deal: burger + fries',
       ofTrans: 'Arabic and Kurdish (optional)', ofDescAr: 'Arabic description', ofDescKu: 'Kurdish description', ofTransHint: 'Empty → the main description is shown',
@@ -26,6 +28,8 @@
       ofCat_burgers: 'Burgers', ofCat_sides: 'Sides', ofCat_sauces: 'Sauces', ofCat_drinks: 'Drinks',
     },
     ar: {
+      ofMenu: 'العروض / الخصومات', ofSetupTitle: 'إعداد لمرة واحدة مطلوب',
+      ofSetup: 'تبدأ العروض بالعمل بعد أن يشغّل المالك تحديثين لقاعدة البيانات في Supabase ← SQL Editor: أولاً 006 ثم 013. يمكنك رؤية النموذج أدناه الآن؛ زر «بدء العرض» يعمل بعد الإعداد.',
       ofTitle: 'العروض', ofSub: 'خصومات يراها الزبائن في القائمة لمدة محددة', ofNew: 'عرض جديد', ofItem: 'اختر صنفاً…',
       ofAddItem: 'إضافة صنف آخر', ofRemove: 'حذف', ofDesc: 'الوصف (يراه الزبائن)', ofDescPh: 'مثلاً: عرض الغداء: برجر + بطاطا',
       ofTrans: 'العربية والكردية (اختياري)', ofDescAr: 'الوصف بالعربية', ofDescKu: 'الوصف بالكردية', ofTransHint: 'إذا تُرك فارغاً يظهر الوصف الرئيسي',
@@ -41,6 +45,8 @@
       ofCat_burgers: 'البرجر', ofCat_sides: 'المقبلات', ofCat_sauces: 'الصوصات', ofCat_drinks: 'المشروبات',
     },
     ku: {
+      ofMenu: 'ئۆفەر / داشکاندن', ofSetupTitle: 'ڕێکخستنێکی یەکجاری پێویستە',
+      ofSetup: 'ئۆفەرەکان کار دەکەن دوای ئەوەی خاوەن دوو نوێکردنەوەی داتابەیس لە Supabase ← SQL Editor ڕادەکات: سەرەتا 006 پاشان 013. دەتوانیت ئێستا فۆڕمەکەی خوارەوە ببینیت؛ «دەستپێکردنی ئۆفەر» دوای ڕێکخستن کار دەکات.',
       ofTitle: 'ئۆفەرەکان', ofSub: 'داشکاندن کە کڕیاران لە لیستەکە دەیبینن بۆ ماوەیەکی دیاریکراو', ofNew: 'ئۆفەری نوێ', ofItem: 'خواردنێک هەڵبژێرە…',
       ofAddItem: 'خواردنێکی تر زیاد بکە', ofRemove: 'لابردن', ofDesc: 'وەسف (کڕیاران دەیبینن)', ofDescPh: 'بۆ نموونە: ئۆفەری نیوەڕۆ: بەرگەر + پەتاتە',
       ofTrans: 'عەرەبی و کوردی (ئارەزوومەندانە)', ofDescAr: 'وەسف بە عەرەبی', ofDescKu: 'وەسف بە کوردی', ofTransHint: 'ئەگەر بەتاڵ بێت وەسفە سەرەکییەکە پیشان دەدرێت',
@@ -82,18 +88,25 @@
   const waitMe = setInterval(() => { if (state.me) { clearInterval(waitMe); loadSettings(); } }, 1000);
 
   /* ── ☰ menu row ── */
-  $('menuBtn').addEventListener('click', () => {
-    const pw = document.querySelector('#sheetPanel [data-open="password"]');
-    if (!pw || document.querySelector('#sheetPanel [data-open="offers"]')) return;
+  function addMenuRow() {
+    const panel = $('sheetPanel');
+    const anchor = panel.querySelector('[data-open="staff"]') || panel.querySelector('[data-open="password"]');
+    if (!anchor || panel.querySelector('[data-open="offers"]')) return;
     const admin = state.me && state.me.role === 'admin';
-    const allowed = admin || (O.settings && O.settings.can_manage);
-    pw.insertAdjacentHTML('beforebegin',
-      '<button type="button" data-open="offers" ' + (allowed ? '' : 'disabled') + ' class="' + esc(pw.className) + '">' +
+    if (!admin && !(O.settings && O.settings.can_manage)) return;          // cashiers: only with the "Offers" switch on
+    const tpl = panel.querySelector('[data-open="password"]') || anchor;
+    anchor.insertAdjacentHTML(anchor.dataset.open === 'staff' ? 'afterend' : 'beforebegin',
+      '<button type="button" data-open="offers" class="' + esc(tpl.className) + '">' +
         '<span class="grid h-9 w-9 place-items-center rounded-xl bg-brand/10 text-brand"><i data-lucide="badge-percent" class="h-4 w-4"></i></span>' +
-        '<span class="flex-1">' + esc(t('ofTitle')) + '</span>' +
-        (allowed ? '<i data-lucide="chevron-right" class="h-4 w-4 text-muted rtl-flip"></i>' : '<span class="text-[10px] font-bold uppercase text-muted">' + esc(t('adminOnly')) + '</span>') +
+        '<span class="flex-1">' + esc(t('ofMenu')) + '</span>' +
+        '<i data-lucide="chevron-right" class="h-4 w-4 text-muted rtl-flip"></i>' +
       '</button>');
     if (window.lucide) lucide.createIcons();
+  }
+  $('menuBtn').addEventListener('click', () => {
+    addMenuRow();
+    // A cashier whose switch was just turned on sees the row without reloading
+    if (state.me && state.me.role !== 'admin') loadSettings().then(addMenuRow);
     const orig = $('sheetPanel').onclick;
     $('sheetPanel').onclick = (e) => {
       const b = e.target.closest('[data-open="offers"]');
@@ -106,15 +119,18 @@
   async function openOffers() {
     $('sheetPanel').onclick = null;
     $('sheetPanel').oninput = null;
-    openSheet(sheetHeader(t('ofTitle'), t('ofSub')) + '<div class="grid place-items-center py-12"><i data-lucide="loader-2" class="h-6 w-6 animate-spin text-brand"></i></div>', true);
+    openSheet(sheetHeader(t('ofMenu'), t('ofSub')) + '<div class="grid place-items-center py-12"><i data-lucide="loader-2" class="h-6 w-6 animate-spin text-brand"></i></div>', true);
     await loadSettings();
     const [{ data, error }, prices] = await Promise.all([sb.rpc('staff_list_offers'), sb.from('menu_items').select('id,price,available')]);
-    if (error || !data) {
+    (prices.data || []).forEach((p) => { O.prices[p.id] = p; });
+    const missing = !!error && /staff_list_offers|PGRST202|schema cache|does not exist/i.test((error.message || '') + (error.code || ''));
+    if (error && !missing) {
       closeSheet();
-      toast(/staff_list_offers|PGRST202/.test((error && (error.message + error.code)) || '') ? t('ofNotReady') : /not allowed/.test((error && error.message) || '') ? t('ofNoPerm') : t('actionFailed'), 3500);
+      toast(/not allowed/.test(error.message || '') ? t('ofNoPerm') : t('actionFailed'), 3500);
       return;
     }
-    (prices.data || []).forEach((p) => { O.prices[p.id] = p; });
+    O.setup = missing;
+    if (missing) { O.list = []; render(); return; }
     O.skew = Date.parse(data.now) - Date.now();
     O.list = data.offers || [];
     render();
@@ -145,8 +161,11 @@
       '</article>';
     };
 
-    openSheet(sheetHeader(t('ofTitle'), t('ofSub')) +
+    openSheet(sheetHeader(t('ofMenu'), t('ofSub')) +
       '<div class="overflow-y-auto px-5 py-4">' +
+        (O.setup ? '<div class="mb-4 flex gap-3 rounded-2xl bg-amber-400/15 p-4 ring-1 ring-amber-500/40">' +
+          '<i data-lucide="wrench" class="mt-0.5 h-5 w-5 shrink-0 text-amber-600"></i>' +
+          '<div><p class="text-sm font-bold">' + esc(t('ofSetupTitle')) + '</p><p class="mt-1 text-xs leading-relaxed">' + esc(t('ofSetup')) + '</p></div></div>' : '') +
         '<h4 class="text-sm font-bold">' + esc(t('ofRunning')) + '</h4>' +
         '<div class="mt-2 space-y-2">' + (runningList.length ? runningList.map((o) => offerCard(o, true)).join('') : '<p class="py-3 text-sm text-muted">' + esc(t('ofNone')) + '</p>') + '</div>' +
         formHtml() +
@@ -212,7 +231,7 @@
         '<div class="mt-1 grid grid-cols-3 gap-2" dir="ltr">' + box('ofsH', 'ofHours', f.h, 72) + box('ofsM', 'ofMinutes', f.m, 59) + box('ofsS', 'ofSeconds', f.s, 59) + '</div>' +
         '<p id="ofsEndsAt" class="mt-1.5 text-sm font-semibold text-ink"></p></div>' +
       '<p id="ofsErr" class="hidden rounded-xl bg-brand/10 px-3 py-2 text-xs font-bold text-brand"></p>' +
-      '<button type="submit" id="ofsStart" class="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand to-brandDark px-4 py-3 text-sm font-bold text-white shadow-glow transition active:scale-[.98] disabled:opacity-60">' +
+      '<button type="submit" id="ofsStart" ' + (O.setup ? 'disabled ' : '') + 'class="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand to-brandDark px-4 py-3 text-sm font-bold text-white shadow-glow transition active:scale-[.98] disabled:opacity-60">' +
         '<i data-lucide="zap" class="h-4 w-4"></i>' + esc(t('ofStart')) + '</button>' +
     '</form>';
   }
@@ -303,6 +322,7 @@
 
   async function startOffer() {
     const f = O.form;
+    if (O.setup) return showErr(t('ofSetup'));
     const items = f.rows.map((r) => ({ item_id: r.item_id, percent: Math.round(Number(r.percent)) }));
     if (items.some((i) => !i.item_id)) return showErr(t('ofErrItem'));
     if (new Set(items.map((i) => i.item_id)).size !== items.length) return showErr(t('ofErrDup'));
