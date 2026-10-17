@@ -21,7 +21,7 @@ const I18N = {
   en: {
     dir: 'ltr', short: 'EN', native: 'English',
     loginTitle: 'Staff sign in', loginSub: 'For admins and cashiers only.', email: 'Email', password: 'Password', signIn: 'Sign in',
-    badLogin: 'Wrong email or password.', notStaff: 'This account is not a staff account.',
+    badLogin: 'Wrong email or password.', notStaff: 'This account is not a staff account.', sessionEnded: 'You were signed out (login expired or ended by the owner). Please sign in again.', signOutAll: 'Sign out all devices', signOutAllConfirm: 'Sign this account out on every device now?', signedOutAll: 'Signed out on all devices',
     shiftTitle: 'Ready for orders?', shiftSub: 'Tap to start your shift. This turns on the new-order sound and keeps the screen awake.',
     startShift: 'Start shift', signedInAs: 'Signed in as',
     live: 'Live', connecting: 'Connecting…', offline: 'Connection lost — reconnecting… New orders may be delayed.',
@@ -56,7 +56,7 @@ const I18N = {
   ku: {
     dir: 'rtl', short: 'ک', native: 'کوردی',
     loginTitle: 'چوونەژوورەوەی کارمەندان', loginSub: 'تەنها بۆ بەڕێوەبەران و کاشێرەکان.', email: 'ئیمەیڵ', password: 'وشەی نهێنی', signIn: 'چوونەژوورەوە',
-    badLogin: 'ئیمەیڵ یان وشەی نهێنی هەڵەیە.', notStaff: 'ئەم هەژمارە هەژماری کارمەند نییە.',
+    badLogin: 'ئیمەیڵ یان وشەی نهێنی هەڵەیە.', notStaff: 'ئەم هەژمارە هەژماری کارمەند نییە.', sessionEnded: 'چوویتە دەرەوە (کاتی چوونەژوورەوە تەواو بوو یان خاوەن کۆتایی پێهێنا). تکایە دووبارە بچۆ ژوورەوە.', signOutAll: 'دەرچوون لە هەموو ئامێرەکان', signOutAllConfirm: 'ئێستا ئەم هەژمارە لە هەموو ئامێرەکان دەربکرێت؟', signedOutAll: 'لە هەموو ئامێرەکان دەرکرا',
     shiftTitle: 'ئامادەی بۆ داواکارییەکان؟', shiftSub: 'دابگرە بۆ دەستپێکردنی شیفتەکەت. دەنگی داواکاری نوێ کار دەکات و شاشەکە ناکوژێتەوە.',
     startShift: 'دەستپێکردنی شیفت', signedInAs: 'چوویتە ژوورەوە وەک',
     live: 'ڕاستەوخۆ', connecting: 'پەیوەندی دەکرێت…', offline: 'پەیوەندی پچڕا — هەوڵی دووبارە دەدرێتەوە… لەوانەیە داواکارییە نوێیەکان دوا بکەون.',
@@ -91,7 +91,7 @@ const I18N = {
   ar: {
     dir: 'rtl', short: 'ع', native: 'العربية',
     loginTitle: 'دخول الموظفين', loginSub: 'للمدراء والكاشير فقط.', email: 'البريد الإلكتروني', password: 'كلمة المرور', signIn: 'تسجيل الدخول',
-    badLogin: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.', notStaff: 'هذا الحساب ليس حساب موظف.',
+    badLogin: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.', notStaff: 'هذا الحساب ليس حساب موظف.', sessionEnded: 'تم تسجيل خروجك (انتهت الجلسة أو أنهاها المالك). يرجى تسجيل الدخول مرة أخرى.', signOutAll: 'تسجيل الخروج من كل الأجهزة', signOutAllConfirm: 'تسجيل خروج هذا الحساب من كل الأجهزة الآن؟', signedOutAll: 'تم تسجيل الخروج من كل الأجهزة',
     shiftTitle: 'جاهز لاستقبال الطلبات؟', shiftSub: 'اضغط لبدء نوبتك. سيعمل صوت الطلبات الجديدة وتبقى الشاشة مضاءة.',
     startShift: 'بدء النوبة', signedInAs: 'مسجّل الدخول باسم',
     live: 'مباشر', connecting: 'جارٍ الاتصال…', offline: 'انقطع الاتصال — جارٍ إعادة المحاولة… قد تتأخر الطلبات الجديدة.',
@@ -372,6 +372,9 @@ async function afterLogin() {
     setTimeout(() => { $('loginForm').classList.remove('pointer-events-none', 'opacity-60'); $('loginError').classList.add('hidden'); afterLogin(); }, 5000);
     return;
   }
+  // 007: the login itself must still be valid (not expired, not ended with "Sign out all devices")
+  const alive = row ? await sb.rpc('is_staff') : { data: false };
+  if (row && !alive.error && alive.data === false) { endSession(); return; }
   if (!row) {
     await sb.auth.signOut();
     show('loginView');
@@ -493,6 +496,20 @@ document.addEventListener('visibilitychange', () => {
 });
 setInterval(() => { if (state.me && !state.online && navigator.onLine !== false) subscribeLive(); }, 15000);
 window.addEventListener('offline', () => setOnline(false));
+// 007: check every minute that this login wasn't ended by the owner or expired
+function endSession() {
+  state.me = null;
+  sb.auth.signOut({ scope: 'local' }).finally(() => {
+    show('loginView');
+    $('loginError').textContent = t('sessionEnded');
+    $('loginError').classList.remove('hidden');
+  });
+}
+setInterval(async () => {
+  if (!state.me || navigator.onLine === false) return;
+  const { data, error } = await sb.rpc('is_staff');
+  if (!error && data === false) endSession();
+}, 60000);
 // Safety net: refresh the list every 30 s in case a live update was missed
 setInterval(() => { if (state.me && document.visibilityState === 'visible') loadOrders(); }, 30000);
 
@@ -1032,6 +1049,7 @@ async function openStaff() {
           (s.is_me ? '' :
             '<div class="flex flex-col gap-1">' +
               '<button type="button" data-reset="' + s.user_id + '" class="rounded-lg px-2 py-1 text-[11px] font-bold text-muted transition hover:bg-edge/5 hover:text-ink">' + esc(t('resetPw')) + '</button>' +
+              '<button type="button" data-signout="' + s.user_id + '" class="rounded-lg px-2 py-1 text-[11px] font-bold text-muted transition hover:bg-edge/5 hover:text-ink">' + esc(t('signOutAll')) + '</button>' +
               '<button type="button" data-remove="' + s.user_id + '" class="rounded-lg px-2 py-1 text-[11px] font-bold text-brand transition hover:bg-brand/10">' + esc(t('remove')) + '</button>' +
             '</div>') +
         '</div>').join('') + '</div>' +
@@ -1063,6 +1081,13 @@ async function openStaff() {
       if (!confirm(t('removeConfirm'))) return;
       try { await staffCall({ action: 'remove', user_id: rm.getAttribute('data-remove') }); toast(t('staffRemoved')); openStaff(); }
       catch (err) { toast(err.message || t('actionFailed'), 3500); }
+      return;
+    }
+    const so = e.target.closest('[data-signout]');
+    if (so) {
+      if (!confirm(t('signOutAllConfirm'))) return;
+      const { error } = await sb.rpc('admin_sign_out_user', { p_user: so.getAttribute('data-signout') });
+      toast(error ? t('actionFailed') : t('signedOutAll'));
       return;
     }
     const rs = e.target.closest('[data-reset]');

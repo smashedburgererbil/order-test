@@ -1111,6 +1111,9 @@ const HOURS = [
   { open: '11:30', close: '24:00' }, // Friday
   { open: '11:30', close: '24:00' }, // Saturday
 ];
+// Filled from the order system (owner page → Opening hours): special dates + last-order minutes before closing
+let SPECIAL_DAYS = {};
+let LAST_ORDER_MIN = 15;
 
 const STORE = {
   phone:     '+9647508030803',
@@ -1164,7 +1167,7 @@ const I18N = {
     openingHours:'Opening Hours',
     weeklySchedule:'Weekly schedule',
     openNow:'Open Now',
-    closedNow:'Closed', closesIn:'Closes in', opensIn:'Opens in', cdHours:'Hours', cdMinutes:'Minutes', cdSeconds:'Seconds',
+    closedNow:'Closed', closesIn:'Closes in', opensIn:'Opens in', cdHours:'Hours', cdMinutes:'Minutes', cdSeconds:'Seconds', lastOrdersIn:'Last orders in', closingSoon:'Closing soon, order now', closedOpensAt:"We're closed, opens at {w}", closedOpensOn:"We're closed, opens {d} at {w}", specialDays:'Special days',
     openDaily:'Open Daily',
     hoursNote:'Times shown in Baghdad local time.',
     addressLine1:'Gulan Street, The Boulevard',
@@ -1205,7 +1208,7 @@ const I18N = {
     openingHours:'ساعات العمل',
     weeklySchedule:'الجدول الأسبوعي',
     openNow:'مفتوح الآن',
-    closedNow:'مغلق', closesIn:'يغلق خلال', opensIn:'يفتح خلال', cdHours:'ساعة', cdMinutes:'دقيقة', cdSeconds:'ثانية',
+    closedNow:'مغلق', closesIn:'يغلق خلال', opensIn:'يفتح خلال', cdHours:'ساعة', cdMinutes:'دقيقة', cdSeconds:'ثانية', lastOrdersIn:'آخر طلب خلال', closingSoon:'سنغلق قريباً، اطلب الآن', closedOpensAt:'نحن مغلقون، نفتح الساعة {w}', closedOpensOn:'نحن مغلقون، نفتح يوم {d} الساعة {w}', specialDays:'أيام خاصة',
     openDaily:'مفتوح يومياً',
     hoursNote:'الأوقات حسب توقيت بغداد.',
     addressLine1:'شارع كولان، البوليفارد',
@@ -1246,7 +1249,7 @@ const I18N = {
     openingHours:'کاتژمێری کارکردن',
     weeklySchedule:'خشتەی هەفتانە',
     openNow:'ئێستا کراوەیە',
-    closedNow:'داخراوە', closesIn:'دادەخرێت دوای', opensIn:'دەکرێتەوە دوای', cdHours:'کاتژمێر', cdMinutes:'خولەک', cdSeconds:'چرکە',
+    closedNow:'داخراوە', closesIn:'دادەخرێت دوای', opensIn:'دەکرێتەوە دوای', cdHours:'کاتژمێر', cdMinutes:'خولەک', cdSeconds:'چرکە', lastOrdersIn:'دوایین داواکاری دوای', closingSoon:'بەم زووانە دادەخرێت، ئێستا داوا بکە', closedOpensAt:'داخراوین، کاتژمێر {w} دەکرێینەوە', closedOpensOn:'داخراوین، {d} کاتژمێر {w} دەکرێینەوە', specialDays:'ڕۆژە تایبەتەکان',
     openDaily:'ڕۆژانە کراوەیە',
     hoursNote:'کاتەکان بە کاتی بەغدا نیشان دراون.',
     addressLine1:'شەقامی گوڵان، بۆلیڤارد',
@@ -1581,71 +1584,121 @@ function clearCart() {
 function getStoreTimeParts() {
   try {
     const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: STORE_TZ, weekday: 'short', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false,
+      timeZone: STORE_TZ, year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short',
+      hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false,
     }).formatToParts(new Date());
     const get = (k) => parts.find((x) => x.type === k).value;
+    const n = (k) => parseInt(get(k), 10);
     return {
+      y: n('year'), mo: n('month'), d: n('day'),
       day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(get('weekday')),
-      hour: parseInt(get('hour'), 10) % 24, minute: parseInt(get('minute'), 10), second: parseInt(get('second'), 10),
+      hour: n('hour') % 24, minute: n('minute'), second: n('second'),
     };
   } catch {
     const d = new Date();
-    return { day: d.getDay(), hour: d.getHours(), minute: d.getMinutes(), second: d.getSeconds() };
+    return { y: d.getFullYear(), mo: d.getMonth() + 1, d: d.getDate(), day: d.getDay(), hour: d.getHours(), minute: d.getMinutes(), second: d.getSeconds() };
   }
 }
 
 const hmSecs = (v) => { const [h, m] = v.split(':').map(Number); return (h * 60 + m) * 60; };
+const isoDay = (p, k) => new Date(Date.UTC(p.y, p.mo - 1, p.d + k)).toISOString().slice(0, 10);
 
-// Opening window of a weekday, in seconds from the start of that day (close may pass 86400 = midnight)
-function dayWindow(day) {
-  const h = HOURS[((day % 7) + 7) % 7];
-  if (!h) return null;
-  const open = hmSecs(h.open);
-  let close = hmSecs(h.close);
-  if (close <= open) close += 86400;
-  return { open, close };
+// Hours of the day k days from today (Baghdad): a special date (Eid, holiday, event) wins over the weekly hours
+function hoursFor(p, k) {
+  const sp = SPECIAL_DAYS[isoDay(p, k)];
+  if (sp) return sp.closed ? null : sp;
+  return HOURS[(((p.day + k) % 7) + 7) % 7];
 }
 
-// { day, open, secs } — secs = seconds until it closes (if open) or opens (if closed)
+// That day's window in seconds from the start of TODAY (close may pass midnight); last = last-order time
+function dayWindow(p, k) {
+  const h = hoursFor(p, k);
+  if (!h || !h.open || !h.close) return null;
+  const open = hmSecs(h.open) + k * 86400;
+  let close = hmSecs(h.close) + k * 86400;
+  if (close <= open) close += 86400;
+  return { open, close, last: Math.max(open, close - LAST_ORDER_MIN * 60), h };
+}
+
+// open = taking orders now · secs = until last orders (open) or until opening (closed) · soon = last 30 min
 function getStoreStatus() {
   const p = getStoreTimeParts();
   const now = p.hour * 3600 + p.minute * 60 + p.second;
-  const y = dayWindow(p.day - 1);
-  if (y && now < y.close - 86400) return { day: p.day, open: true, secs: y.close - 86400 - now };
-  const td = dayWindow(p.day);
-  if (td && now >= td.open && now < td.close) return { day: p.day, open: true, secs: td.close - now };
-  for (let k = 0; k < 8; k++) {
-    const w = dayWindow(p.day + k);
-    if (w && w.open + k * 86400 > now) return { day: p.day, open: false, secs: w.open + k * 86400 - now };
+  for (const k of [-1, 0]) {
+    const w = dayWindow(p, k);
+    if (w && now >= w.open && now < w.last) return { day: p.day, open: true, secs: w.last - now, soon: w.last - now <= 1800 };
+  }
+  for (let k = 0; k < 15; k++) {
+    const w = dayWindow(p, k);
+    if (w && w.open > now) {
+      return { day: p.day, open: false, secs: w.open - now, opensAt: fmt12(w.h.open),
+        opensDay: w.open >= 86400 ? (DAY_NAMES[state.locale] || DAY_NAMES.en)[(p.day + k) % 7] : '' };
+    }
   }
   return { day: p.day, open: false, secs: 0 };
 }
 
 function computeIsOpenNow() { return getStoreStatus().open; }
 
+// "We're closed, opens at 11:30 AM" (or "… opens Sunday at …")
+function closedMsg() {
+  const st = getStoreStatus();
+  if (!st.opensAt) return t('closedNow');
+  return t(st.opensDay ? 'closedOpensOn' : 'closedOpensAt').replace('{d}', st.opensDay).replace('{w}', '\u2066' + st.opensAt + '\u2069');  // keeps '11:30 AM' in order inside Arabic/Kurdish text
+}
+
 function fmt12(v) {
   const [h0, m] = v.split(':').map(Number);
   const h = h0 % 24;
   return ((h % 12) || 12) + ':' + String(m).padStart(2, '0') + ' ' + (h < 12 ? 'AM' : 'PM');
 }
-function hoursRange(day) { const h = HOURS[day]; return h ? fmt12(h.open) + ' – ' + fmt12(h.close) : t('closedNow'); }
+function hoursRange(h) { return h && h.open && h.close ? fmt12(h.open) + ' – ' + fmt12(h.close) : t('closedNow'); }
 
-// Runs every second: countdown numbers, "Closes in"/"Opens in", the Open Now badge, and today's row at midnight
-let _hoursDay = null;
+// Hours from the order system (the owner can change them); the built-in HOURS are used until this loads
+function applySchedule(d) {
+  if (!d || !Array.isArray(d.week)) return;
+  d.week.forEach((w) => { HOURS[w.dow] = w.closed ? null : { open: w.open, close: w.close }; });
+  SPECIAL_DAYS = {};
+  (d.special || []).forEach((x) => { SPECIAL_DAYS[x.day] = x; });
+  LAST_ORDER_MIN = Math.max(0, Number(d.last_order_minutes) || 0);
+  renderHoursList();
+}
+
+const CD_BOX  = 'rounded-xl bg-white/[.14] px-1 py-1.5 text-center ring-1 ring-white/25 transition-colors';
+const CD_SOON = 'rounded-xl bg-amber-400/30 px-1 py-1.5 text-center ring-1 ring-amber-200/70 transition-colors';
+
+// Every second while the page is visible: numbers, label, amber "closing soon", Open Now badge, today's row at midnight
+let _hoursDay = null, _cdSoon = null, _tickTimer = null;
 function tickCountdown() {
   const st = getStoreStatus();
   if (st.day !== _hoursDay) { renderHoursList(); return; }
-  if (st.open !== state.isOpen) { state.isOpen = st.open; renderOpenStatus(); }
+  if (st.open !== state.isOpen) {
+    state.isOpen = st.open;
+    renderOpenStatus();
+    if (!$('drawerRoot').classList.contains('hidden')) renderCart();
+  }
   const box = $('countdown');
   if (!box) return;
   box.hidden = !st.secs;
   if (!st.secs) return;
+  const soon = !!st.soon;
+  if (soon !== _cdSoon) {
+    _cdSoon = soon;
+    box.querySelectorAll('[data-cdbox]').forEach((b) => { b.className = soon ? CD_SOON : CD_BOX; });
+    $('cdLabel').className = soon ? 'flex items-center gap-1.5 text-[11px] font-bold text-amber-100' : 'flex items-center gap-1.5 text-[11px] font-medium text-white/80';
+    $('cdDot').classList.toggle('hidden', !soon);
+  }
   const two = (n) => String(n).padStart(2, '0');
-  $('cdLabel').textContent = t(st.open ? 'closesIn' : 'opensIn');
+  $('cdText').textContent = t(soon ? 'closingSoon' : !st.open ? 'opensIn' : LAST_ORDER_MIN ? 'lastOrdersIn' : 'closesIn');
   $('cdH').textContent = two(Math.floor(st.secs / 3600));
   $('cdM').textContent = two(Math.floor((st.secs % 3600) / 60));
   $('cdS').textContent = two(st.secs % 60);
 }
+// Paused while the page is in the background; re-synced with the real clock when the customer comes back
+function startTicker() { clearInterval(_tickTimer); tickCountdown(); _tickTimer = setInterval(tickCountdown, 1000); }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { clearInterval(_tickTimer); _tickTimer = null; } else startTicker();
+});
 
 function renderOpenStatus() {
   const badge = $('openNowBadge');
@@ -2096,14 +2149,18 @@ function renderHoursList() {
   if (!list) return;
 
   const names = DAY_NAMES[state.locale] || DAY_NAMES.en;
-  const todayIdx = getStoreTimeParts().day;
+  const p = getStoreTimeParts();
+  const todayIdx = p.day;
+  const todayHours = hoursFor(p, 0);
   _hoursDay = todayIdx;
-  if ($('todayHours')) $('todayHours').textContent = hoursRange(todayIdx);
+  _cdSoon = null;
+  if ($('todayHours')) $('todayHours').textContent = hoursRange(todayHours);
   const cdBox = (id, key) =>
-    '<div class="rounded-xl bg-white/[.14] px-1 py-1.5 text-center ring-1 ring-white/25">' +
+    '<div data-cdbox class="' + CD_BOX + '">' +
       '<span id="' + id + '" class="tnum block text-lg font-bold leading-none text-white">00</span>' +
       '<span class="mt-1 block text-[10px] font-medium leading-none text-white/75">' + esc(t(key)) + '</span>' +
     '</div>';
+  const todaySpecial = SPECIAL_DAYS[isoDay(p, 0)];
 
   list.innerHTML = names.map((name, i) => {
     const isToday = i === todayIdx;
@@ -2111,18 +2168,30 @@ function renderHoursList() {
       '<div class="flex items-center justify-between gap-3">' +
         '<span class="flex items-center gap-2 ' + (isToday ? 'text-white' : 'text-white/80') + '">' +
           (isToday ? '<span class="h-1.5 w-1.5 rounded-full bg-white"></span>' : '') +
-          esc(name) +
+          esc(name) + (isToday && todaySpecial && todaySpecial.note ? ' <span class="text-[11px] font-medium text-white/75">· ' + esc(todaySpecial.note) + '</span>' : '') +
         '</span>' +
-        '<span class="tnum text-white" dir="ltr">' + esc(hoursRange(i)) + '</span>' +
+        '<span class="tnum text-white" dir="ltr">' + esc(hoursRange(isToday ? todayHours : HOURS[i])) + '</span>' +
       '</div>' +
       (isToday
         ? '<div id="countdown" class="mt-2">' +
-            '<p id="cdLabel" class="text-[11px] font-medium text-white/80"></p>' +
+            '<p id="cdLabel" class="flex items-center gap-1.5 text-[11px] font-medium text-white/80">' +
+              '<span id="cdDot" class="hidden h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300"></span><span id="cdText"></span></p>' +
             '<div class="mt-1 grid grid-cols-3 gap-2" dir="ltr">' + cdBox('cdH', 'cdHours') + cdBox('cdM', 'cdMinutes') + cdBox('cdS', 'cdSeconds') + '</div>' +
           '</div>'
         : '') +
     '</li>';
   }).join('');
+
+  // Upcoming special dates (next 2 weeks), e.g. "Eid · 20/10 · Closed"
+  const upcoming = Object.values(SPECIAL_DAYS).filter((x) => x.day > isoDay(p, 0) && x.day <= isoDay(p, 14)).sort((a, b) => (a.day < b.day ? -1 : 1));
+  if (upcoming.length) {
+    list.insertAdjacentHTML('beforeend', '<li class="py-2"><p class="text-[11px] font-semibold text-white/75">' + esc(t('specialDays')) + '</p>' +
+      upcoming.map((x) => '<div class="mt-1 flex items-center justify-between gap-3 text-white/90"><span>' + esc(x.note || '') +
+        ' <span class="tnum text-white/75" dir="ltr">' + esc(x.day.slice(8, 10) + '/' + x.day.slice(5, 7)) + '</span></span>' +
+        '<span class="tnum text-white" dir="ltr">' + esc(hoursRange(x.closed ? null : x)) + '</span></div>').join('') + '</li>');
+  }
+  state.isOpen = computeIsOpenNow();
+  renderOpenStatus();
   tickCountdown();
 }
 
@@ -2222,11 +2291,18 @@ function renderCart() {
       '<span class="tnum font-extrabold text-brand">' + esc(formatPrice(subtotal)) + '</span>' +
     '</div>' +
     '<p class="mt-1 text-[11px] text-muted">' + esc(t('orderNote')) + '</p>' +
-    '<button type="button" id="checkoutBtn" ' +
-      'class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand to-brandDark px-4 py-3 text-sm font-bold text-white transition hover:from-brandDark hover:to-brandDeeper active:scale-[.99]">' +
-      '<i data-lucide="send" class="h-4 w-4 rtl-flip"></i>' +
-      '<span>' + esc(t('sendOrder')) + '</span>' +
-    '</button>';
+    (state.isOpen
+      ? '<button type="button" id="checkoutBtn" ' +
+          'class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand to-brandDark px-4 py-3 text-sm font-bold text-white transition hover:from-brandDark hover:to-brandDeeper active:scale-[.99]">' +
+          '<i data-lucide="send" class="h-4 w-4 rtl-flip"></i>' +
+          '<span>' + esc(t('sendOrder')) + '</span>' +
+        '</button>'
+      // Closed: the menu can still be browsed, but ordering waits until opening time
+      : '<button type="button" id="checkoutBtn" disabled ' +
+          'class="mt-3 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-edge/10 px-4 py-3 text-sm font-bold text-muted">' +
+          '<i data-lucide="clock" class="h-4 w-4"></i>' +
+          '<span>' + esc(closedMsg()) + '</span>' +
+        '</button>');
 
   refreshIcons();
 }
@@ -2784,7 +2860,7 @@ function init() {
   renderFloatingBar();
   refreshIcons();
 
-  window.setInterval(tickCountdown, 1000);
+  startTicker();
 }
 
 if (document.readyState === 'loading') {
