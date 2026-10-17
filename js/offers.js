@@ -106,9 +106,9 @@
         (so ? '' : '<span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand text-white"><i data-lucide="plus" class="h-3.5 w-3.5"></i></span>') +
       '</button></li>';
     };
-    return '<article class="offer-slide w-full shrink-0" role="group" aria-roledescription="slide" aria-label="' +
+    return '<article class="offer-slide w-full min-w-0 shrink-0" role="group" aria-roledescription="slide" aria-label="' +
         esc(t('ofSlide').replace('{n}', k + 1).replace('{t}', total)) + '">' +
-      '<div class="grid h-full overflow-hidden rounded-3xl bg-surface ring-1 ring-edge/5 shadow-card sm:grid-cols-2">' +
+      '<div class="grid h-full grid-cols-1 overflow-hidden rounded-3xl bg-surface ring-1 ring-edge/5 shadow-card sm:grid-cols-2">' +
         '<div class="relative aspect-[16/10] bg-gradient-to-br sm:aspect-auto sm:min-h-[19rem] ' + esc(first.gradient) + '">' +
           '<span class="absolute inset-0 grid place-items-center text-6xl" aria-hidden="true">' + esc(first.emoji) + '</span>' +
           (photo ? '<img src="' + esc(photo) + '" alt="" class="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" onerror="this.style.display=\'none\'" />' : '') +
@@ -118,7 +118,7 @@
           // 2+ offers: previous at the start edge, next at the end edge (they swap sides in Arabic/Kurdish)
           (total > 1 ? arrow('prev', 'chevron-left', 'ofPrev', 'start-3') + arrow('next', 'chevron-right', 'ofNext', 'end-3') : '') +
         '</div>' +
-        '<div class="flex flex-col gap-3 p-4 sm:p-6">' +
+        '<div class="flex min-w-0 flex-col gap-3 p-4 sm:p-6">' +
           '<p class="font-display text-xl leading-snug sm:text-2xl">' + esc(desc(o)) + '</p>' +
           '<ul class="space-y-2">' + items.map(row).join('') + '</ul>' +
         '</div>' +
