@@ -273,6 +273,22 @@
   }
   .group:hover .item-media img { transform: scale(1.05); }
 
+  /* ── Sold out: faded photo + a sticker in the top corner (end side → top-left in Arabic/Kurdish) ── */
+  .is-soldout > img { filter: grayscale(.7); opacity: .75; }
+  .group:hover .item-media.is-soldout > img { transform: none; }
+  .so-sticker {
+    position: absolute; top: 4%; inset-inline-end: 3%; z-index: 10;
+    display: block; width: 30%; transform: rotate(-8deg); pointer-events: none;
+  }
+  .so-sticker.so-small { top: -6%; inset-inline-end: -2%; width: 56%; }
+  .is-soldout > .so-emoji { visibility: hidden; }   /* the faded photo must not show the fallback emoji behind it */
+  .so-sticker > img,
+  .item-media .so-sticker > img,
+  .group:hover .item-media .so-sticker > img {
+    position: static; width: 100%; height: auto; object-fit: contain; transform: none; transition: none;
+    filter: drop-shadow(0 3px 4px rgba(0,0,0,.35)) drop-shadow(0 1px 1px rgba(0,0,0,.25));
+  }
+
   .intro-overlay {
     background-color: rgba(70, 70, 75, 0.40);
     backdrop-filter: blur(5px) saturate(0.9);
@@ -1167,7 +1183,7 @@ const I18N = {
     openingHours:'Opening Hours',
     weeklySchedule:'Weekly schedule',
     openNow:'Open Now',
-    closedNow:'Closed', closesIn:'Closes in', opensIn:'Opens in', cdHours:'Hours', cdMinutes:'Minutes', cdSeconds:'Seconds', lastOrdersIn:'Last orders in', closingSoon:'Closing soon, order now', closedOpensAt:"We're closed, opens at {w}", closedOpensOn:"We're closed, opens {d} at {w}", specialDays:'Special days',
+    closedNow:'Closed', closesIn:'Closes in', opensIn:'Opens in', cdHours:'Hours', cdMinutes:'Minutes', cdSeconds:'Seconds', lastOrdersIn:'Last orders in', closingSoon:'Closing soon, order now', closedOpensAt:"We're closed, opens at {w}", closedOpensOn:"We're closed, opens {d} at {w}", specialDays:'Special days', soldOutLabel:'Sold out', soldOutToday:'Sold out today - back soon', soldOutInCart:'Sold out - please remove it', removeSoldOut:'Remove sold-out items to send your order',
     openDaily:'Open Daily',
     hoursNote:'Times shown in Baghdad local time.',
     addressLine1:'Gulan Street, The Boulevard',
@@ -1208,7 +1224,7 @@ const I18N = {
     openingHours:'ساعات العمل',
     weeklySchedule:'الجدول الأسبوعي',
     openNow:'مفتوح الآن',
-    closedNow:'مغلق', closesIn:'يغلق خلال', opensIn:'يفتح خلال', cdHours:'ساعة', cdMinutes:'دقيقة', cdSeconds:'ثانية', lastOrdersIn:'آخر طلب خلال', closingSoon:'سنغلق قريباً، اطلب الآن', closedOpensAt:'نحن مغلقون، نفتح الساعة {w}', closedOpensOn:'نحن مغلقون، نفتح يوم {d} الساعة {w}', specialDays:'أيام خاصة',
+    closedNow:'مغلق', closesIn:'يغلق خلال', opensIn:'يفتح خلال', cdHours:'ساعة', cdMinutes:'دقيقة', cdSeconds:'ثانية', lastOrdersIn:'آخر طلب خلال', closingSoon:'سنغلق قريباً، اطلب الآن', closedOpensAt:'نحن مغلقون، نفتح الساعة {w}', closedOpensOn:'نحن مغلقون، نفتح يوم {d} الساعة {w}', specialDays:'أيام خاصة', soldOutLabel:'نفد', soldOutToday:'نفد اليوم - سيعود قريباً', soldOutInCart:'نفد - يرجى حذفه', removeSoldOut:'احذف الأصناف النافدة لإرسال طلبك',
     openDaily:'مفتوح يومياً',
     hoursNote:'الأوقات حسب توقيت بغداد.',
     addressLine1:'شارع كولان، البوليفارد',
@@ -1249,7 +1265,7 @@ const I18N = {
     openingHours:'کاتژمێری کارکردن',
     weeklySchedule:'خشتەی هەفتانە',
     openNow:'ئێستا کراوەیە',
-    closedNow:'داخراوە', closesIn:'دادەخرێت دوای', opensIn:'دەکرێتەوە دوای', cdHours:'کاتژمێر', cdMinutes:'خولەک', cdSeconds:'چرکە', lastOrdersIn:'دوایین داواکاری دوای', closingSoon:'بەم زووانە دادەخرێت، ئێستا داوا بکە', closedOpensAt:'داخراوین، کاتژمێر {w} دەکرێینەوە', closedOpensOn:'داخراوین، {d} کاتژمێر {w} دەکرێینەوە', specialDays:'ڕۆژە تایبەتەکان',
+    closedNow:'داخراوە', closesIn:'دادەخرێت دوای', opensIn:'دەکرێتەوە دوای', cdHours:'کاتژمێر', cdMinutes:'خولەک', cdSeconds:'چرکە', lastOrdersIn:'دوایین داواکاری دوای', closingSoon:'بەم زووانە دادەخرێت، ئێستا داوا بکە', closedOpensAt:'داخراوین، کاتژمێر {w} دەکرێینەوە', closedOpensOn:'داخراوین، {d} کاتژمێر {w} دەکرێینەوە', specialDays:'ڕۆژە تایبەتەکان', soldOutLabel:'نەما', soldOutToday:'ئەمڕۆ نەما - بەم زووانە دەگەڕێتەوە', soldOutInCart:'نەما - تکایە لای ببە', removeSoldOut:'شتە نەماوەکان لابە بۆ ناردنی داواکارییەکەت',
     openDaily:'ڕۆژانە کراوەیە',
     hoursNote:'کاتەکان بە کاتی بەغدا نیشان دراون.',
     addressLine1:'شەقامی گوڵان، بۆلیڤارد',
@@ -1976,7 +1992,6 @@ function setActiveTabVisual(categoryId) {
 function visibleItems() {
   const q = state.search.trim().toLowerCase();
   return MENU.filter((item) => {
-    if (!item.available) return false;
     if (state.activeCategory !== 'all' && item.category !== state.activeCategory) return false;
     if (!q) return true;
     const haystack = [
@@ -1984,13 +1999,25 @@ function visibleItems() {
       tx(item.desc, 'en'), tx(item.desc, 'ar'), tx(item.desc, 'ku'),
     ].join(' ').toLowerCase();
     return haystack.includes(q);
-  });
+  }).sort((a, b) => (a.available === b.available ? 0 : a.available ? -1 : 1));   // sold out last (stable: keeps menu order)
 }
+
+// Red "SOLD OUT" sticker (lazy, WebP with PNG fallback)
+function soldOutSticker(small) {
+  return '<picture class="so-sticker' + (small ? ' so-small' : '') + '" aria-hidden="true">' +
+    '<source srcset="image/soldout.webp" type="image/webp">' +
+    '<img src="image/soldout.png" alt="" width="347" height="346" loading="lazy" decoding="async" />' +
+  '</picture>';
+}
+function cartHasSoldOut() { return state.cart.some((l) => { const i = findItem(l.itemId); return i && !i.available; }); }
 
 function renderItemMedia(item, opts) {
   const sizeClass = (opts && opts.sizeClass) || 'text-5xl sm:text-6xl';
   const showTags = !(opts && opts.hideTags);
-  const showPlus = !(opts && opts.hidePlus);
+  const soldOut = !item.available;
+  const showPlus = !(opts && opts.hidePlus) && !soldOut;
+  const mediaCls = 'item-media' + (soldOut ? ' is-soldout' : '');
+  const sticker = soldOut ? soldOutSticker() : '';
 
   const tagPills = showTags ? item.tags.slice(0, 2).map((k) => {
     const s = TAG_STYLES[k];
@@ -2007,29 +2034,32 @@ function renderItemMedia(item, opts) {
     : '';
 
   if (item.image) {
-    return '<div class="item-media bg-gradient-to-br ' + esc(item.gradient) + '">' +
-      '<span class="absolute inset-0 grid place-items-center ' + sizeClass + '" aria-hidden="true">' + esc(item.emoji) + '</span>' +
+    return '<div class="' + mediaCls + ' bg-gradient-to-br ' + esc(item.gradient) + '">' +
+      '<span class="so-emoji absolute inset-0 grid place-items-center ' + sizeClass + '" aria-hidden="true">' + esc(item.emoji) + '</span>' +
       '<img src="' + esc(thumbSrc(item.image)) + '" alt="' + esc(tx(item.name)) + '" loading="lazy" decoding="async" ' +
         'onerror="this.style.display=\'none\'" />' +
       (tagPills ? '<div class="absolute top-2 start-2 z-10 flex flex-col gap-1">' + tagPills + '</div>' : '') +
-      plus +
+      plus + sticker +
     '</div>';
   }
 
-  return '<div class="item-media bg-gradient-to-br ' + esc(item.gradient) + '">' +
+  return '<div class="' + mediaCls + ' bg-gradient-to-br ' + esc(item.gradient) + '">' +
     '<span class="absolute inset-0 grid place-items-center ' + sizeClass + '" aria-hidden="true">' + esc(item.emoji) + '</span>' +
     (tagPills ? '<div class="absolute top-2 start-2 z-10 flex flex-col gap-1">' + tagPills + '</div>' : '') +
-    plus +
+    plus + sticker +
   '</div>';
 }
 
 function renderCard(item) {
-  return '<button type="button" data-open="' + esc(item.id) + '" ' +
-    'class="reveal group flex flex-col overflow-hidden rounded-2xl bg-surface text-start ring-1 ring-edge/5 shadow-card transition hover:-translate-y-0.5 hover:ring-brand/40 active:scale-[.99]">' +
+  const soldOut = !item.available;
+  return '<button type="button" data-open="' + esc(item.id) + '" ' + (soldOut ? 'aria-disabled="true" ' : '') +
+    'class="reveal group flex flex-col overflow-hidden rounded-2xl bg-surface text-start ring-1 ring-edge/5 shadow-card transition ' +
+      (soldOut ? 'cursor-default' : 'hover:-translate-y-0.5 hover:ring-brand/40 active:scale-[.99]') + '">' +
     renderItemMedia(item) +
     '<div class="flex flex-1 flex-col gap-1 p-3">' +
-      '<h3 class="line-clamp-2 text-sm font-semibold leading-tight text-ink">' + esc(tx(item.name)) + '</h3>' +
-      '<p class="tnum mt-auto pt-1 text-sm font-bold text-brand">' + esc(formatPrice(item.price)) + '</p>' +
+      '<h3 class="line-clamp-2 text-sm font-semibold leading-tight ' + (soldOut ? 'text-muted' : 'text-ink') + '">' + esc(tx(item.name)) + '</h3>' +
+      (soldOut ? '<p class="text-[11px] font-bold leading-none text-brand">' + esc(t('soldOutLabel')) + '</p>' : '') +
+      '<p class="tnum mt-auto pt-1 text-sm font-bold ' + (soldOut ? 'text-muted line-through decoration-2' : 'text-brand') + '">' + esc(formatPrice(item.price)) + '</p>' +
     '</div>' +
   '</button>';
 }
@@ -2221,16 +2251,18 @@ function renderCart() {
     const summary = selectionsSummary(item, line.selections);
     const lineTotal = unitPrice(item, line.selections) * line.qty;
 
+    const soldOut = !item.available;
     const thumb = item.image
-      ? '<div class="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br ' + esc(item.gradient) + '">' +
-          '<span class="absolute inset-0 grid place-items-center text-2xl" aria-hidden="true">' + esc(item.emoji) + '</span>' +
-          '<img src="' + esc(thumbSrc(item.image)) + '" alt="" class="absolute inset-0 h-full w-full object-cover" loading="lazy" onerror="this.style.display=\'none\'" />' +
+      ? '<div class="relative h-14 w-14 shrink-0 rounded-xl bg-gradient-to-br ' + esc(item.gradient) + (soldOut ? ' is-soldout' : '') + '">' +
+          '<span class="so-emoji absolute inset-0 grid place-items-center text-2xl" aria-hidden="true">' + esc(item.emoji) + '</span>' +
+          '<img src="' + esc(thumbSrc(item.image)) + '" alt="" class="absolute inset-0 h-full w-full rounded-xl object-cover" loading="lazy" onerror="this.style.display=\'none\'" />' +
+          (soldOut ? soldOutSticker(true) : '') +
         '</div>'
       : '<div class="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-to-br ' + esc(item.gradient) + ' text-2xl">' +
           '<span aria-hidden="true">' + esc(item.emoji) + '</span>' +
         '</div>';
 
-    return '<div class="mb-3 rounded-2xl bg-surfaceAlt p-3 ring-1 ring-edge/5">' +
+    return '<div class="mb-3 rounded-2xl bg-surfaceAlt p-3 ring-1 ' + (soldOut ? 'ring-brand/50' : 'ring-edge/5') + '">' +
       '<div class="flex gap-3">' +
         thumb +
         '<div class="min-w-0 flex-1">' +
@@ -2241,6 +2273,7 @@ function renderCart() {
               '<i data-lucide="trash-2" class="h-3.5 w-3.5"></i>' +
             '</button>' +
           '</div>' +
+          (soldOut ? '<p class="mt-0.5 text-[11px] font-bold text-brand">' + esc(t('soldOutInCart')) + '</p>' : '') +
           (summary ? '<p class="mt-0.5 line-clamp-2 text-[11px] text-muted">' + esc(summary) + '</p>' : '') +
           '<div class="mt-2 flex items-center gap-3">' +
             '<div class="inline-flex items-center rounded-lg bg-base ring-1 ring-edge/10">' +
@@ -2291,7 +2324,13 @@ function renderCart() {
       '<span class="tnum font-extrabold text-brand">' + esc(formatPrice(subtotal)) + '</span>' +
     '</div>' +
     '<p class="mt-1 text-[11px] text-muted">' + esc(t('orderNote')) + '</p>' +
-    (state.isOpen
+    (cartHasSoldOut()
+      ? '<button type="button" id="checkoutBtn" disabled ' +
+          'class="mt-3 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-brand/10 px-4 py-3 text-sm font-bold text-brand ring-1 ring-brand/30">' +
+          '<i data-lucide="ban" class="h-4 w-4"></i>' +
+          '<span>' + esc(t('removeSoldOut')) + '</span>' +
+        '</button>'
+      : state.isOpen
       ? '<button type="button" id="checkoutBtn" ' +
           'class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand to-brandDark px-4 py-3 text-sm font-bold text-white transition hover:from-brandDark hover:to-brandDeeper active:scale-[.99]">' +
           '<i data-lucide="send" class="h-4 w-4 rtl-flip"></i>' +
@@ -2719,6 +2758,8 @@ $('grid').addEventListener('click', (e) => {
   const btn = e.target.closest('[data-open]');
   if (!btn) return;
   const id = btn.getAttribute('data-open');
+  const item = id && findItem(id);
+  if (item && !item.available) { showToast(t('soldOutToday')); return; }
   if (id) openItemModal(id);
 });
 

@@ -209,7 +209,7 @@
     renderTracker();
   }
 
-  /* ── Sold-out items from the staff screen are hidden from the menu ── */
+  /* ── Sold-out items from the staff screen: shown greyed with a sticker, can't be ordered ── */
   function loadAvailability() {
     fetch(CFG.supabaseUrl + '/rest/v1/menu_items?select=id,available', { headers: { apikey: CFG.supabaseKey } })
       .then((r) => r.ok ? r.json() : [])
@@ -224,7 +224,8 @@
       .catch(() => {});
   }
   loadAvailability();
-  setInterval(() => { if (document.visibilityState === 'visible') loadAvailability(); }, 60000);
+  setInterval(() => { if (document.visibilityState === 'visible') loadAvailability(); }, 10000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') loadAvailability(); });
 
   /* ── Opening hours, special days and last-order time (set by the owner) ── */
   function loadSchedule() { rpc('get_store_hours', {}).then(applySchedule).catch(() => { /* keep the built-in hours */ }); }
@@ -239,6 +240,7 @@
   window.sendOrderOnWhatsApp = async function sendOrderToSystem() {
     if (sending || state.cart.length === 0) return;
     if (!state.isOpen) { showToast(closedMsg()); return; }
+    if (cartHasSoldOut()) { showToast(t('removeSoldOut')); renderCart(); return; }
     if (state.orderType === 'dine-in' && !state.table) {
       showToast(t('tableRequired'));
       const input = $('tableInput');
