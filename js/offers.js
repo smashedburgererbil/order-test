@@ -112,7 +112,7 @@
         '<div class="relative aspect-[16/10] bg-gradient-to-br sm:aspect-auto sm:min-h-[19rem] ' + esc(first.gradient) + '">' +
           '<span class="absolute inset-0 grid place-items-center text-6xl" aria-hidden="true">' + esc(first.emoji) + '</span>' +
           (photo ? '<img src="' + esc(photo) + '" alt="" class="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" onerror="this.style.display=\'none\'" />' : '') +
-          '<span class="absolute top-3 start-3 rounded-full bg-brand px-3 py-1 text-sm font-extrabold text-white shadow-glow ring-1 ring-white/30">' + esc(badge) + ' <span class="text-[11px] font-bold uppercase">' + esc(t('ofOff')) + '</span></span>' +
+          '<span class="absolute top-3 start-3 rounded-full bg-brand px-3 py-1 text-sm font-extrabold text-white shadow-glow ring-1 ring-white/30">' + (badge.startsWith('−') ? '' : esc(t('ofUpTo')) + ' ') + '<span dir="ltr">−' + top + '%</span> <span class="text-[11px] font-bold uppercase">' + esc(t('ofOff')) + '</span></span>' +
           '<span class="absolute bottom-3 start-3 inline-flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-xs font-bold text-white ring-1 ring-white/15 backdrop-blur">' +
             '<i data-lucide="timer" class="h-3.5 w-3.5"></i>' + esc(t('ofEndsIn')) + ' <span class="tnum" dir="ltr" data-of-ends="' + esc(o.ends_at) + '">' + left(o.ends_at) + '</span></span>' +
           // 2+ offers: previous at the start edge, next at the end edge (they swap sides in Arabic/Kurdish)
