@@ -14,6 +14,21 @@
 (function () {
   const CFG = window.APP_CONFIG;
   const ACTIVE_KEY = 'smashed-burger.activeOrder.v1';
+  const TABLE_KEY = 'smashed-burger.tableQr.v1';
+
+  // 006: each table's QR code carries a secret token (menu.html?table=5&k=…). Keep it for this visit.
+  const tableQr = (() => {
+    try {
+      const q = new URLSearchParams(location.search);
+      if (q.get('table') && q.get('k')) {
+        const v = { table: q.get('table').replace(/\D/g, ''), token: q.get('k') };
+        sessionStorage.setItem(TABLE_KEY, JSON.stringify(v));
+        return v;
+      }
+      return JSON.parse(sessionStorage.getItem(TABLE_KEY) || 'null');
+    } catch { return null; }
+  })();
+  if (tableQr && !state.table) { state.table = tableQr.table; state.orderType = 'dine-in'; }
   const POLL_MS = 4000;
 
   /* ── Texts (added to the menu's own dictionary so they follow the chosen language) ── */
@@ -37,6 +52,7 @@
       sendFailed: 'Couldn\'t send your order. Check your internet and try again.', sendWhatsApp: 'Send on WhatsApp instead',
       soldOutErr: 'Sorry — something in your cart just sold out. Please check your cart.',
       sending: 'Sending…', tableLabel: 'Table', takeawayLabel: 'Takeaway',
+      errTableQr: 'To order at your table, please scan the QR code on the table.', errRateLimit: 'Too many orders from this table right now — please ask the cashier.',
       iosGuideT: 'Get an alert when it\'s ready', iosGuideS: 'On iPhone it takes 3 quick steps:',
       iosStep1: 'Tap {share} Share at the bottom of the screen', iosStep2: 'Choose {add} Add to Home Screen, then Add',
       iosStep3: 'Open Smashed Burger from your Home Screen and tap Turn on alerts',
@@ -61,6 +77,7 @@
       sendFailed: 'تعذّر إرسال طلبك. تحقق من الإنترنت وحاول مرة أخرى.', sendWhatsApp: 'الإرسال عبر واتساب بدلاً من ذلك',
       soldOutErr: 'عذراً — نفد أحد الأصناف في سلتك للتو. يرجى مراجعة السلة.',
       sending: 'جارٍ الإرسال…', tableLabel: 'طاولة', takeawayLabel: 'سفري',
+      errTableQr: 'للطلب من طاولتك، يرجى مسح رمز QR الموجود على الطاولة.', errRateLimit: 'طلبات كثيرة من هذه الطاولة الآن — يرجى مراجعة الكاشير.',
       iosGuideT: 'احصل على تنبيه عندما يجهز طلبك', iosGuideS: 'على الآيفون ٣ خطوات سريعة فقط:',
       iosStep1: 'اضغط {share} مشاركة أسفل الشاشة', iosStep2: 'اختر {add} إضافة إلى الشاشة الرئيسية ثم إضافة',
       iosStep3: 'افتح Smashed Burger من الشاشة الرئيسية واضغط «تفعيل التنبيهات»',
@@ -85,6 +102,7 @@
       sendFailed: 'نەتوانرا داواکارییەکەت بنێردرێت. ئینتەرنێتەکەت بپشکنە و دووبارە هەوڵ بدەرەوە.', sendWhatsApp: 'لەبری ئەوە بە واتساپ بینێرە',
       soldOutErr: 'ببورە — شتێک لە سەبەتەکەت ئێستا نەما. تکایە سەبەتەکەت بپشکنە.',
       sending: 'دەنێردرێت…', tableLabel: 'مێز', takeawayLabel: 'بۆ بردنەوە',
+      errTableQr: 'بۆ داواکردن لە مێزەکەت، تکایە کۆدی QRـی سەر مێزەکە سکان بکە.', errRateLimit: 'ئێستا داواکاری زۆر لەم مێزەوە هاتووە — تکایە پرسیار لە کاشێر بکە.',
       iosGuideT: 'کاتێک ئامادە بوو ئاگادارت دەکەینەوە', iosGuideS: 'لە ئایفۆن تەنها ٣ هەنگاوی خێرایە:',
       iosStep1: 'لە خوارەوەی شاشەکە {share} Share دابگرە', iosStep2: '{add} Add to Home Screen هەڵبژێرە، پاشان Add',
       iosStep3: 'Smashed Burger لە شاشەی سەرەکی بکەرەوە و «هەڵکردنی ئاگادارکردنەوە» دابگرە',
@@ -92,6 +110,18 @@
     },
   };
   for (const lang of Object.keys(TXT)) Object.assign(I18N[lang], TXT[lang]);
+  const FB_TXT = {
+    en: { fbTitle: 'How was your visit?', fbSub: 'Optional · only the owner reads this', fb_food: 'Food', fb_service: 'Service', fb_speed: 'Speed',
+      fb_value: 'Prices / value', fb_cleanliness: 'Cleanliness', fb_overall: 'Overall', fbComment: 'Anything you want to tell us? (optional)',
+      fbSend: 'Send feedback', fbNeedOverall: 'Please rate “Overall”', fbThanks: 'Thank you! Your feedback helps us get better.', fbErr: 'Could not send — please try again' },
+    ar: { fbTitle: 'كيف كانت زيارتك؟', fbSub: 'اختياري · يقرأه المالك فقط', fb_food: 'الطعام', fb_service: 'الخدمة', fb_speed: 'السرعة',
+      fb_value: 'الأسعار / القيمة', fb_cleanliness: 'النظافة', fb_overall: 'التقييم العام', fbComment: 'هل تريد إخبارنا بشيء؟ (اختياري)',
+      fbSend: 'إرسال التقييم', fbNeedOverall: 'يرجى اختيار «التقييم العام»', fbThanks: 'شكراً لك! رأيك يساعدنا على التحسن.', fbErr: 'تعذر الإرسال — حاول مرة أخرى' },
+    ku: { fbTitle: 'سەردانەکەت چۆن بوو؟', fbSub: 'ئارەزوومەندانە · تەنها خاوەن دەیخوێنێتەوە', fb_food: 'خواردن', fb_service: 'خزمەتگوزاری', fb_speed: 'خێرایی',
+      fb_value: 'نرخ / بەها', fb_cleanliness: 'پاکوخاوێنی', fb_overall: 'بەگشتی', fbComment: 'شتێکت هەیە پێمان بڵێیت؟ (ئارەزوومەندانە)',
+      fbSend: 'ناردنی هەڵسەنگاندن', fbNeedOverall: 'تکایە «بەگشتی» هەڵبسەنگێنە', fbThanks: 'سوپاس! ڕاکەت یارمەتیمان دەدات باشتر بین.', fbErr: 'نەنێردرا — تکایە دووبارە هەوڵ بدەرەوە' },
+  };
+  for (const lang of Object.keys(FB_TXT)) Object.assign(I18N[lang], FB_TXT[lang]);
 
   const L = (k) => t(k);
   const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -196,12 +226,19 @@
   loadAvailability();
   setInterval(() => { if (document.visibilityState === 'visible') loadAvailability(); }, 60000);
 
+  /* ── Opening hours, special days and last-order time (set by the owner) ── */
+  function loadSchedule() { rpc('get_store_hours', {}).then(applySchedule).catch(() => { /* keep the built-in hours */ }); }
+  loadSchedule();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') loadSchedule(); });
+  setInterval(() => { if (document.visibilityState === 'visible') loadSchedule(); }, 10 * 60000);
+
   /* ── Sending the order ── */
   const whatsappFallback = window.sendOrderOnWhatsApp;
   let sending = false;
 
   window.sendOrderOnWhatsApp = async function sendOrderToSystem() {
     if (sending || state.cart.length === 0) return;
+    if (!state.isOpen) { showToast(closedMsg()); return; }
     if (state.orderType === 'dine-in' && !state.table) {
       showToast(t('tableRequired'));
       const input = $('tableInput');
@@ -219,9 +256,15 @@
       await permAsk;
       const push = await subscribePush();
       const items = state.cart.map((l) => ({ item_id: l.itemId, qty: l.qty, selections: l.selections }));
-      const res = await rpc('place_order', {
-        p_items: items, p_order_type: state.orderType, p_table: state.table || '', p_lang: state.locale, p_push: push,
-      });
+      const args = {
+        // The table from the scanned QR code wins over anything typed, so the token always matches
+        p_items: items, p_order_type: state.orderType,
+        p_table: (state.orderType === 'dine-in' && tableQr ? tableQr.table : state.table) || '',
+        p_lang: state.locale, p_push: push,
+      };
+      // Only sent when the customer scanned a table QR card (keeps older database versions working too)
+      if (state.orderType === 'dine-in' && tableQr) args.p_table_token = tableQr.token;
+      const res = await rpc('place_order', args);
       track('order/' + state.orderType);
       setActive({ id: res.id, token: res.token, code: res.code, at: Date.now() });
       lastStatus = null;
@@ -235,11 +278,15 @@
       poll(true);
     } catch (e) {
       if (/sold out/i.test(e.message)) { showToast(L('soldOutErr')); loadAvailability(); }
+      else if (/table token/i.test(e.message)) showToast(L('errTableQr'));
+      else if (/rate limit/i.test(e.message)) showToast(L('errRateLimit'));
+      else if (/store closed/i.test(e.message)) { state.isOpen = false; showToast(closedMsg()); loadSchedule(); }
       else showFailure();
     } finally {
       sending = false;
       const b = $('checkoutBtn');
-      if (b) { b.disabled = false; const s = b.querySelector('span'); if (s) s.textContent = t('sendOrder'); }
+      if (b && state.isOpen) { b.disabled = false; const s = b.querySelector('span'); if (s) s.textContent = t('sendOrder'); }
+      else if (b) renderCart();
     }
   };
 
@@ -390,6 +437,7 @@
         '<span class="tnum text-muted">' + esc(formatPrice(l.line_total)) + '</span></li>';
     }).join('');
 
+    const feedback = feedbackCard(o, a);
     const where = o.order_type === 'takeaway' ? L('takeawayLabel') : L('tableLabel') + ' ' + (o.table_no || state.table || '');
     const hero = o.status === 'ready' ? ' trk-ready' : '';
 
@@ -413,6 +461,7 @@
         (alerts ? '<div class="mt-5">' + alerts + '</div>' : '') +
         (items ? '<ul class="mt-5 space-y-1.5 rounded-2xl bg-surfaceAlt p-4">' + items +
           '<li class="mt-2 flex justify-between border-t border-edge/10 pt-2 text-sm font-bold"><span>' + esc(t('total')) + '</span><span class="tnum text-brand">' + esc(formatPrice(o.total || 0)) + '</span></li></ul>' : '') +
+        feedback +
       '</div>' +
       '<footer class="shrink-0 border-t border-edge/5 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">' +
         (o.status === 'ready' && readyLoop
@@ -425,6 +474,79 @@
     refreshIcons();
     renderChip();
   }
+
+  /* ── Feedback once the order is ready / picked up (optional, only the owner reads it) ── */
+  const FB_KEYS = ['food', 'service', 'speed', 'value', 'cleanliness', 'overall'];
+  const fb = { id: null, state: 'unknown', r: {}, comment: '', busy: false };   // state: unknown | open | sent | off
+  const STAR = '<svg viewBox="0 0 24 24" class="h-7 w-7" aria-hidden="true"><path fill="currentColor" d="M12 2.6l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.3l-5.9 3.2 1.3-6.5-4.9-4.6 6.6-.8z"/></svg>';
+  const STAR_ON = 'text-amber-400', STAR_OFF = 'text-edge/20';
+
+  function feedbackCard(o, a) {
+    if (!['ready', 'collected'].includes(o.status)) return '';
+    if (fb.id !== a.id) { Object.assign(fb, { id: a.id, state: 'unknown', r: {}, comment: '', busy: false }); checkFeedback(a); }
+    if (fb.state === 'unknown' || fb.state === 'off') return '';
+    if (fb.state === 'sent') {
+      return '<div class="mt-5 flex items-center gap-3 rounded-2xl bg-surfaceAlt p-4 ring-1 ring-edge/5">' +
+        '<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand"><i data-lucide="heart" class="h-5 w-5"></i></span>' +
+        '<p class="text-sm font-semibold">' + esc(L('fbThanks')) + '</p></div>';
+    }
+    const row = (k) =>
+      '<div class="flex items-center justify-between gap-2 py-1' + (k === 'overall' ? ' mt-1 border-t border-edge/10 pt-2' : '') + '">' +
+        '<span class="text-sm ' + (k === 'overall' ? 'font-bold' : 'font-semibold') + '">' + esc(L('fb_' + k)) + '</span>' +
+        '<span class="flex" role="radiogroup" aria-label="' + esc(L('fb_' + k)) + '">' + [1, 2, 3, 4, 5].map((v) =>
+          '<button type="button" data-fb-k="' + k + '" data-fb-v="' + v + '" role="radio" aria-checked="' + (fb.r[k] === v) + '" aria-label="' + v + ' / 5" ' +
+            'class="grid h-9 w-8 place-items-center transition active:scale-90 ' + ((fb.r[k] || 0) >= v ? STAR_ON : STAR_OFF) + '">' + STAR + '</button>').join('') +
+        '</span></div>';
+    return '<div class="mt-5 rounded-2xl bg-surfaceAlt p-4 ring-1 ring-edge/5">' +
+      '<p class="font-display text-lg leading-tight">' + esc(L('fbTitle')) + '</p>' +
+      '<p class="mt-0.5 text-[11px] text-muted">' + esc(L('fbSub')) + '</p>' +
+      '<div class="mt-2">' + FB_KEYS.map(row).join('') + '</div>' +
+      '<textarea id="fbComment" maxlength="500" rows="2" placeholder="' + esc(L('fbComment')) + '" class="mt-3 w-full resize-none rounded-xl border-0 bg-surface px-3 py-2.5 text-sm ring-1 ring-edge/10 placeholder:text-muted focus:ring-2 focus:ring-brand/60">' + esc(fb.comment) + '</textarea>' +
+      '<button type="button" data-fb-send ' + (fb.busy ? 'disabled' : '') + ' class="mt-2 w-full rounded-xl bg-gradient-to-r from-brand to-brandDark px-4 py-3 text-sm font-bold text-white transition active:scale-[.98] disabled:opacity-60">' + esc(L(fb.busy ? 'sending' : 'fbSend')) + '</button>' +
+    '</div>';
+  }
+  function checkFeedback(a) {
+    rpc('feedback_sent', { p_id: a.id, p_token: a.token })
+      .then((sent) => { fb.state = sent ? 'sent' : 'open'; })
+      .catch(() => { fb.state = 'off'; })            // feedback not set up in the database yet → no card
+      .finally(() => { if (fb.id === a.id && !root.classList.contains('hidden')) renderTracker(); });
+  }
+  async function sendFeedback() {
+    const a = getActive();
+    if (!a || fb.busy) return;
+    if (!fb.r.overall) { showToast(L('fbNeedOverall')); return; }
+    fb.busy = true;
+    const btn = root.querySelector('[data-fb-send]');
+    if (btn) { btn.disabled = true; btn.textContent = L('sending'); }
+    try {
+      await rpc('submit_feedback', { p_id: a.id, p_token: a.token, p_ratings: fb.r, p_comment: fb.comment.trim() || null });
+      fb.state = 'sent';
+      // Low rating → phone alert to the owner (the 15-minute job sends it too if this call doesn't get through)
+      fetch(CFG.supabaseUrl + '/functions/v1/feedback-alert', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => {});
+    } catch (e) {
+      if (/already sent/i.test(e.message)) fb.state = 'sent'; else showToast(L('fbErr'));
+    } finally {
+      fb.busy = false;
+      renderTracker();
+    }
+  }
+  root.addEventListener('click', (e) => {
+    const star = e.target.closest('[data-fb-k]');
+    if (star) {
+      const v = +star.dataset.fbV;
+      fb.r[star.dataset.fbK] = v;
+      // Update just these stars, so the card doesn't jump while the customer is rating
+      star.parentElement.querySelectorAll('[data-fb-v]').forEach((x) => {
+        const on = +x.dataset.fbV <= v;
+        x.classList.toggle(STAR_ON, on);
+        x.classList.toggle(STAR_OFF, !on);
+        x.setAttribute('aria-checked', String(+x.dataset.fbV === v));
+      });
+      return;
+    }
+    if (e.target.closest('[data-fb-send]')) sendFeedback();
+  });
+  root.addEventListener('input', (e) => { if (e.target.id === 'fbComment') fb.comment = e.target.value; });
 
   function renderChip() {
     const a = getActive();
