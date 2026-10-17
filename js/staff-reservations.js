@@ -11,7 +11,7 @@
 (function () {
   const TXT = {
     en: {
-      rsBookings: 'Bookings', rsToday: 'Today', rsTomorrow: 'Tomorrow', rsNone: 'No bookings for this day',
+      rsBookings: 'Bookings', rsToday: 'Today', rsTomorrow: 'Tomorrow', rsNone: 'No bookings for this day', rsUpcoming: 'Upcoming', rsFinished: 'Finished / cancelled',
       rsReservedSoon: 'Reserved in the next 2 hours — keep these free for the booked guests',
       rsPeople: 'people', rsTable: 'Table', rsTables: 'Tables',
       st_requested: 'Needs approval', st_confirmed: 'Confirmed', st_arrived: 'Arrived', st_no_show: 'No-show', st_cancelled: 'Cancelled', st_rejected: 'Rejected',
@@ -39,7 +39,7 @@
       rsWaReminder: 'Hello {name}, this is Smashed Burger. A reminder of your table for {people} today at {time}. See you soon! 🍔',
     },
     ku: {
-      rsBookings: 'حیجزەکان', rsToday: 'ئەمڕۆ', rsTomorrow: 'سبەی', rsNone: 'بۆ ئەم ڕۆژە هیچ حیجزێک نییە',
+      rsBookings: 'حیجزەکان', rsToday: 'ئەمڕۆ', rsTomorrow: 'سبەی', rsNone: 'بۆ ئەم ڕۆژە هیچ حیجزێک نییە', rsUpcoming: 'داهاتوو', rsFinished: 'تەواوبوو / هەڵوەشاوە',
       rsReservedSoon: 'لە ٢ کاتژمێری داهاتوودا حیجزکراون — بۆ میوانە حیجزکراوەکان بیانهێڵەوە',
       rsPeople: 'کەس', rsTable: 'مێز', rsTables: 'مێزەکان',
       st_requested: 'پێویستی بە ڕەزامەندییە', st_confirmed: 'پشتڕاستکراوە', st_arrived: 'گەیشت', st_no_show: 'نەهات', st_cancelled: 'هەڵوەشێنرایەوە', st_rejected: 'ڕەتکرایەوە',
@@ -67,7 +67,7 @@
       rsWaReminder: 'سڵاو {name}، ئێمە سماشد بەرگەرین. بیرخستنەوەی مێزەکەت بۆ {people} کەس ئەمڕۆ کاتژمێر {time}. بەخێربێیت! 🍔',
     },
     ar: {
-      rsBookings: 'الحجوزات', rsToday: 'اليوم', rsTomorrow: 'غداً', rsNone: 'لا توجد حجوزات لهذا اليوم',
+      rsBookings: 'الحجوزات', rsToday: 'اليوم', rsTomorrow: 'غداً', rsNone: 'لا توجد حجوزات لهذا اليوم', rsUpcoming: 'القادمة', rsFinished: 'منتهية / ملغاة',
       rsReservedSoon: 'محجوزة خلال الساعتين القادمتين — اتركها للضيوف الذين حجزوا',
       rsPeople: 'أشخاص', rsTable: 'طاولة', rsTables: 'طاولات',
       st_requested: 'بانتظار الموافقة', st_confirmed: 'مؤكد', st_arrived: 'وصل', st_no_show: 'لم يحضر', st_cancelled: 'ملغى', st_rejected: 'مرفوض',
@@ -120,7 +120,7 @@
   const erbilToday = () => new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
   const addDays = (iso, n) => new Date(new Date(iso + 'T12:00:00Z').getTime() + n * 86400000).toISOString().slice(0, 10);
 
-  const RS = { view: 'orders', day: erbilToday(), list: [], flags: {}, tables: [], combos: [], settings: null, pending: 0, plan: null };
+  const RS = { view: 'orders', day: 'upcoming', list: [], flags: {}, tables: [], combos: [], settings: null, pending: 0, plan: null, dayCounts: {}, upcomingCount: 0 };
 
   /* ── Header button + view container ── */
   const btn = document.createElement('button');
@@ -159,7 +159,9 @@
     if (!state.me) return;
     try { await sb.rpc('staff_refresh_reservations'); } catch { /* ignore */ }
     const [list, pend, tbl, cmb, set] = await Promise.all([
-      sb.from('reservations').select('*').eq('res_date', RS.day).order('start_at'),
+      RS.day === 'upcoming'
+        ? sb.from('reservations').select('*').gte('res_date', erbilToday()).in('status', ['requested', 'confirmed', 'arrived']).order('start_at').limit(300)
+        : sb.from('reservations').select('*').eq('res_date', RS.day).order('start_at'),
       sb.from('reservations').select('id', { count: 'exact', head: true }).eq('status', 'requested').gte('start_at', new Date().toISOString()),
       sb.from('restaurant_tables').select('*').eq('active', true).order('number'),
       sb.from('table_combos').select('*'),
@@ -174,6 +176,11 @@
     RS.tables = tbl.data || [];
     RS.combos = cmb.data || [];
     RS.settings = set.data;
+    // How many active bookings each upcoming day has (badges on the date chips)
+    const { data: cnt } = await sb.from('reservations').select('res_date').gte('res_date', erbilToday()).in('status', ['requested', 'confirmed', 'arrived']);
+    RS.dayCounts = {};
+    (cnt || []).forEach((x) => { RS.dayCounts[x.res_date] = (RS.dayCounts[x.res_date] || 0) + 1; });
+    RS.upcomingCount = (cnt || []).length;
     const phones = [...new Set(RS.list.map((r) => r.phone))];
     RS.flags = {};
     if (phones.length) {
@@ -191,7 +198,7 @@
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, (p) => {
         if (p.eventType === 'INSERT' && p.new) {
           chimeNewOrder();
-          toast((p.new.status === 'requested' ? t('rsNewRequest') : t('rsNewBooking')) + ' · ' + hm(p.new.start_at) + ' · ' + p.new.party_size + ' ' + t('rsPeople'), 4000);
+          toast((p.new.status === 'requested' ? t('rsNewRequest') : t('rsNewBooking')) + ' · ' + p.new.name + ' · ' + fdate(new Date(p.new.res_date + 'T12:00:00Z'), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }) + ' ' + hm(p.new.start_at) + ' · ' + p.new.party_size + ' ' + t('rsPeople'), 4000);
         }
         load();
       })
@@ -222,7 +229,7 @@
     const admin = state.me.role === 'admin';
     return '<article class="card-in rounded-3xl bg-surface p-4 shadow-card ring-1 ring-edge/5 ' + (r.status === 'requested' ? 'is-pending' : '') + '">' +
       '<div class="flex items-start gap-3">' +
-        '<div class="text-center"><p class="tnum font-display text-3xl leading-none">' + hm(r.start_at) + '</p><p class="tnum mt-1 text-[11px] text-muted">– ' + hm(r.end_at) + '</p></div>' +
+        '<div class="text-center">' + (RS.day === 'upcoming' ? '<p class="mb-1 rounded-lg bg-brand/10 px-2 py-0.5 text-[11px] font-bold text-brand">' + esc(r.res_date === erbilToday() ? t('rsToday') : fdate(new Date(r.res_date + 'T12:00:00Z'), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })) + '</p>' : '') + '<p class="tnum font-display text-3xl leading-none">' + hm(r.start_at) + '</p><p class="tnum mt-1 text-[11px] text-muted">– ' + hm(r.end_at) + '</p></div>' +
         '<div class="min-w-0 flex-1">' +
           '<div class="flex flex-wrap items-center gap-1.5"><span class="rounded-full px-2 py-0.5 text-[11px] font-bold ' + (STATUS_CLS[r.status] || '') + '">' + esc(t('st_' + r.status)) + '</span>' +
             (r.auto_released ? '<span class="text-[11px] text-muted">' + esc(t('rsAutoReleased')) + '</span>' : '') + '</div>' +
@@ -255,21 +262,28 @@
       return;
     }
     const today = erbilToday();
-    const chips = Array.from({ length: 14 }, (_, i) => addDays(today, i)).map((d, i) => {
-      const on = d === RS.day;
-      const dt = new Date(d + 'T12:00:00Z');
-      const label = i === 0 ? t('rsToday') : i === 1 ? t('rsTomorrow') : fdate(dt, { weekday: 'short', timeZone: 'UTC' });
-      return '<button type="button" data-rs-day="' + d + '" class="flex w-[4.4rem] shrink-0 flex-col items-center rounded-2xl px-2 py-2 ring-1 transition active:scale-95 ' + (on ? 'bg-brand text-white ring-brand shadow-glow' : 'bg-surface ring-edge/5') + '">' +
-        '<span class="text-[11px] font-bold ' + (on ? 'text-white/85' : 'text-muted') + '">' + esc(label) + '</span><span class="tnum font-display text-xl">' + dt.getUTCDate() + '</span></button>';
-    }).join('');
+    // Booking count badge on each date, so no booking is ever hidden on another day
+    const badge = (n, on) => n ? '<span class="tnum absolute -top-1.5 -end-1.5 grid h-5 min-w-[1.25rem] place-items-center rounded-full px-1 text-[10px] font-bold ring-2 ring-base ' + (on ? 'bg-white text-brand' : 'bg-brand text-white') + '">' + n + '</span>' : '';
+    const upOn = RS.day === 'upcoming';
+    const chips = '<button type="button" data-rs-day="upcoming" class="relative flex shrink-0 flex-col items-center justify-center rounded-2xl px-3 py-2 ring-1 transition active:scale-95 ' + (upOn ? 'bg-brand text-white ring-brand shadow-glow' : 'bg-surface ring-edge/5') + '">' +
+        '<i data-lucide="list" class="h-4 w-4"></i><span class="mt-0.5 text-[11px] font-bold">' + esc(t('rsUpcoming')) + '</span>' + badge(RS.upcomingCount, upOn) + '</button>' +
+      Array.from({ length: 14 }, (_, i) => addDays(today, i)).map((d, i) => {
+        const on = d === RS.day;
+        const dt = new Date(d + 'T12:00:00Z');
+        const label = i === 0 ? t('rsToday') : i === 1 ? t('rsTomorrow') : fdate(dt, { weekday: 'short', timeZone: 'UTC' });
+        return '<button type="button" data-rs-day="' + d + '" class="relative flex w-[4.4rem] shrink-0 flex-col items-center rounded-2xl px-2 py-2 ring-1 transition active:scale-95 ' + (on ? 'bg-brand text-white ring-brand shadow-glow' : 'bg-surface ring-edge/5') + '">' +
+          '<span class="text-[11px] font-bold ' + (on ? 'text-white/85' : 'text-muted') + '">' + esc(label) + '</span><span class="tnum font-display text-xl">' + dt.getUTCDate() + '</span>' + badge(RS.dayCounts[d], on) + '</button>';
+      }).join('');
     const active = RS.list.filter((r) => ['requested', 'confirmed', 'arrived'].includes(r.status));
     const done = RS.list.filter((r) => !['requested', 'confirmed', 'arrived'].includes(r.status));
     view.innerHTML =
       '<div class="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1">' + chips + '</div>' +
-      (RS.day === today && RS.tables.length ? '<div class="mb-4 rounded-3xl bg-surface p-3 ring-1 ring-edge/5"><p class="mb-2 px-1 text-xs font-bold text-muted">' + esc(t('rsReservedSoon')) + '</p><div id="rsMiniPlan" class="h-[240px] rounded-2xl bg-surfaceAlt/40 sm:h-[300px]"></div></div>' : '') +
+      ((RS.day === today || RS.day === 'upcoming') && RS.tables.length ? '<div class="mb-4 rounded-3xl bg-surface p-3 ring-1 ring-edge/5"><p class="mb-2 px-1 text-xs font-bold text-muted">' + esc(t('rsReservedSoon')) + '</p><div id="rsMiniPlan" class="h-[240px] rounded-2xl bg-surfaceAlt/40 sm:h-[300px]"></div></div>' : '') +
       (RS.list.length ? '' : '<div class="rounded-3xl border-2 border-dashed border-edge/10 px-4 py-12 text-center text-sm text-muted">' + esc(t('rsNone')) + '</div>') +
       '<div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">' + active.map(card).join('') + '</div>' +
-      (done.length ? '<div class="mt-6 grid gap-3 opacity-80 md:grid-cols-2 xl:grid-cols-3">' + done.map(card).join('') + '</div>' : '');
+      // Finished bookings (cancelled, rejected, no-show) stay out of the way, folded up
+      (done.length ? '<details class="mt-6"><summary class="cursor-pointer text-sm font-bold text-muted">' + esc(t('rsFinished')) + ' (' + done.length + ')</summary>' +
+        '<div class="mt-3 grid gap-3 opacity-80 md:grid-cols-2 xl:grid-cols-3">' + done.map(card).join('') + '</div></details>' : '');
     const box = document.getElementById('rsMiniPlan');
     if (box) {
       const plan = FloorPlan.create(box, { labels: { indoor: t('zIndoor'), outdoor: t('zOutdoor'), window: t('zWindow'), family: t('zFamily'), seats: t('rsSeats').toLowerCase(), reserved: t('fpReserved'), cashier: t('fpCashier'), wc: t('fpWc'), drinks: t('fpDrinks'), entrance: t('fpEntrance') } });
