@@ -74,6 +74,10 @@
   }
 
   /* ── Drawing ── */
+  const arrow = (dir, icon, label, side) => '<button type="button" data-of-' + dir + ' aria-label="' + esc(t(label)) + '" ' +
+    'class="absolute top-1/2 ' + side + ' z-10 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink shadow-card ring-1 ring-black/10 backdrop-blur transition hover:text-brand active:scale-90">' +
+    '<i data-lucide="' + icon + '" class="h-5 w-5 rtl-flip"></i></button>';
+
   function slideHtml(o, k, total) {
     const items = o.items.map((i) => ({ ...i, m: findItem(i.item_id) })).filter((i) => i.m);
     const first = items[0].m;
@@ -111,6 +115,8 @@
           '<span class="absolute top-3 start-3 rounded-full bg-brand px-3 py-1 text-sm font-extrabold text-white shadow-glow ring-1 ring-white/30">' + esc(badge) + ' <span class="text-[11px] font-bold uppercase">' + esc(t('ofOff')) + '</span></span>' +
           '<span class="absolute bottom-3 start-3 inline-flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-xs font-bold text-white ring-1 ring-white/15 backdrop-blur">' +
             '<i data-lucide="timer" class="h-3.5 w-3.5"></i>' + esc(t('ofEndsIn')) + ' <span class="tnum" dir="ltr" data-of-ends="' + esc(o.ends_at) + '">' + left(o.ends_at) + '</span></span>' +
+          // 2+ offers: previous at the start edge, next at the end edge (they swap sides in Arabic/Kurdish)
+          (total > 1 ? arrow('prev', 'chevron-left', 'ofPrev', 'start-3') + arrow('next', 'chevron-right', 'ofNext', 'end-3') : '') +
         '</div>' +
         '<div class="flex flex-col gap-3 p-4 sm:p-6">' +
           '<p class="font-display text-xl leading-snug sm:text-2xl">' + esc(desc(o)) + '</p>' +
@@ -139,14 +145,8 @@
     }
     if (OF.index >= list.length) OF.index = 0;
     const many = list.length > 1;
-    const arrow = (dir, icon, label) => '<button type="button" data-of-' + dir + ' aria-label="' + esc(t(label)) + '" ' +
-      'class="grid h-10 w-10 place-items-center rounded-full bg-surface text-ink shadow-card ring-1 ring-edge/10 transition hover:text-brand hover:ring-brand/40 active:scale-90">' +
-      '<i data-lucide="' + icon + '" class="h-5 w-5 rtl-flip"></i></button>';
     section.innerHTML =
-      '<div class="flex items-center justify-between gap-3">' +
-        '<h2 id="offersTitle" class="flex items-center gap-2 font-display text-2xl sm:text-3xl"><span aria-hidden="true">🔥</span>' + esc(t('ofTitle')) + '</h2>' +
-        (many ? '<div class="flex items-center gap-2">' + arrow('prev', 'chevron-left', 'ofPrev') + arrow('next', 'chevron-right', 'ofNext') + '</div>' : '') +
-      '</div>' +
+      '<h2 id="offersTitle" class="flex items-center gap-2 font-display text-2xl sm:text-3xl"><span aria-hidden="true">🔥</span>' + esc(t('ofTitle')) + '</h2>' +
       '<div class="offer-viewport mt-4 overflow-hidden rounded-3xl" role="region" aria-roledescription="carousel" aria-labelledby="offersTitle">' +
         '<div class="offer-track flex">' + list.map((o, k) => slideHtml(o, k, list.length)).join('') + '</div>' +
       '</div>' +
