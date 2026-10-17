@@ -442,8 +442,9 @@ async function loadAvailability() {
 }
 
 let channel = null;
-function subscribeLive() {
-  if (channel) sb.removeChannel(channel);
+async function subscribeLive() {
+  // Fully close the old connection before opening a new one (re-using the same name too early can fail)
+  if (channel) { const old = channel; channel = null; try { await sb.removeChannel(old); } catch { /* ignore */ } }
   setOnline(false, true);
   channel = sb.channel('staff-orders')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
@@ -485,6 +486,12 @@ function setOnline(on, connecting) {
   $('offlineBar').classList.toggle('hidden', on || connecting || !state.me);
 }
 window.addEventListener('online', () => { if (state.me) subscribeLive(); });
+// iPads pause the live connection when the screen sleeps or Safari is in the background.
+// Reconnect as soon as the page is visible again, and keep retrying while it's down.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && state.me) { loadOrders(); if (!state.online) subscribeLive(); }
+});
+setInterval(() => { if (state.me && !state.online && navigator.onLine !== false) subscribeLive(); }, 15000);
 window.addEventListener('offline', () => setOnline(false));
 // Safety net: refresh the list every 30 s in case a live update was missed
 setInterval(() => { if (state.me && document.visibilityState === 'visible') loadOrders(); }, 30000);

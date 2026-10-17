@@ -192,8 +192,8 @@
   }
 
   let ch = null;
-  function subscribe() {
-    if (ch) sb.removeChannel(ch);
+  async function subscribe() {
+    if (ch) { const old = ch; ch = null; try { await sb.removeChannel(old); } catch { /* ignore */ } }
     ch = sb.channel('staff-reservations')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, (p) => {
         if (p.eventType === 'INSERT' && p.new) {
@@ -586,6 +586,8 @@
     renderAll();
   }, 500);
   setInterval(() => { if (state.me && document.visibilityState === 'visible') load(); }, 60000);
+  // After the iPad wakes up: reconnect the bookings feed and refresh the list
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.me) { subscribe(); load(); } });
   const _applyLang = window.applyLang;
   window.applyLang = function () { _applyLang(); renderBtn(); renderView(); };
 })();
