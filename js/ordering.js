@@ -125,20 +125,29 @@
   // 016: place in the queue + stamp card
   const LY_TXT = {
     en: { qAhead: '{n} orders ahead of you', qAhead1: '1 order ahead of you', qNext: 'You’re next!',
-      lyCartTitle: 'Stamp card', lyCartSub: 'Add your phone and collect stamps: {g} stamps = {r}', lyCartLast: 'Your card: {n} of {g} stamps',
-      lyBadPhone: 'Please check your phone number (e.g. 0750 123 4567)', lyAddTitle: 'Collect a stamp for this order', lyAddBtn: 'Add',
+      lyCartTitle: 'Stamp card', lyCartSub: 'No phone number or name needed — your card is kept on this phone. {g} stamps = {r}',
+      lyCartCard: 'Card {c} · {n} of {g} stamps', lyHave: 'Have a card code?', lyCodePh: 'K7Q-3MX',
+      lyBadCode: 'A card code has 6 letters and numbers, like K7Q-3MX', lyUnknown: 'That card code wasn’t found — check it on your other phone',
+      lyAddTitle: 'Collect a stamp for this order', lyStart: 'Start my stamp card', lyUseCard: 'Add to my card {c}', lyAddBtn: 'Add',
+      lyKeep: 'Saved on this phone. On another phone, type the code {c} in the cart.',
       lyStamps: '{n} of {g} stamps', lyLeft: '{n} more for {r}', lyFull: 'Your card is full! Your next order gets {r}.',
       lyReward: 'This order includes your reward: {r}. Tell the cashier when you pay.', lyRewardUsed: 'Reward used — enjoy! Your new card has started.',
       lyEarned: '+1 stamp for this order!', lyPending: 'You get the stamp when you pick up your order.' },
     ar: { qAhead: '{n} طلبات قبلك', qAhead1: 'طلب واحد قبلك', qNext: 'أنت التالي!',
-      lyCartTitle: 'بطاقة الأختام', lyCartSub: 'أضف رقم هاتفك واجمع الأختام: {g} أختام = {r}', lyCartLast: 'بطاقتك: {n} من {g} أختام',
-      lyBadPhone: 'يرجى التحقق من رقم هاتفك (مثلاً 0750 123 4567)', lyAddTitle: 'احصل على ختم لهذا الطلب', lyAddBtn: 'إضافة',
+      lyCartTitle: 'بطاقة الأختام', lyCartSub: 'بدون رقم هاتف أو اسم — بطاقتك محفوظة على هذا الهاتف. {g} أختام = {r}',
+      lyCartCard: 'البطاقة {c} · {n} من {g} أختام', lyHave: 'لديك رمز بطاقة؟', lyCodePh: 'K7Q-3MX',
+      lyBadCode: 'رمز البطاقة 6 أحرف وأرقام، مثل K7Q-3MX', lyUnknown: 'لم يتم العثور على رمز البطاقة — تحقق منه على هاتفك الآخر',
+      lyAddTitle: 'احصل على ختم لهذا الطلب', lyStart: 'ابدأ بطاقة الأختام', lyUseCard: 'أضف إلى بطاقتي {c}', lyAddBtn: 'إضافة',
+      lyKeep: 'محفوظة على هذا الهاتف. على هاتف آخر اكتب الرمز {c} في السلة.',
       lyStamps: '{n} من {g} أختام', lyLeft: 'باقي {n} للحصول على {r}', lyFull: 'بطاقتك ممتلئة! طلبك القادم يحصل على {r}.',
       lyReward: 'هذا الطلب يشمل مكافأتك: {r}. أخبر الكاشير عند الدفع.', lyRewardUsed: 'تم استخدام المكافأة — بالعافية! بدأت بطاقتك الجديدة.',
       lyEarned: '+١ ختم لهذا الطلب!', lyPending: 'تحصل على الختم عند استلام طلبك.' },
     ku: { qAhead: '{n} داواکاری لە پێش تۆیە', qAhead1: 'یەک داواکاری لە پێش تۆیە', qNext: 'نۆرەی تۆیە!',
-      lyCartTitle: 'کارتی خاڵ', lyCartSub: 'ژمارەی مۆبایلەکەت زیاد بکە و خاڵ کۆبکەرەوە: {g} خاڵ = {r}', lyCartLast: 'کارتەکەت: {n} لە {g} خاڵ',
-      lyBadPhone: 'تکایە ژمارەی مۆبایلەکەت بپشکنە (بۆ نموونە 0750 123 4567)', lyAddTitle: 'بۆ ئەم داواکارییە خاڵێک وەربگرە', lyAddBtn: 'زیادکردن',
+      lyCartTitle: 'کارتی خاڵ', lyCartSub: 'پێویست بە ژمارەی مۆبایل یان ناو ناکات — کارتەکەت لەم مۆبایلەدا هەڵدەگیرێت. {g} خاڵ = {r}',
+      lyCartCard: 'کارت {c} · {n} لە {g} خاڵ', lyHave: 'کۆدی کارتت هەیە؟', lyCodePh: 'K7Q-3MX',
+      lyBadCode: 'کۆدی کارت ٦ پیت و ژمارەیە، وەک K7Q-3MX', lyUnknown: 'ئەو کۆدی کارتە نەدۆزرایەوە — لە مۆبایلەکەی ترت بیپشکنە',
+      lyAddTitle: 'بۆ ئەم داواکارییە خاڵێک وەربگرە', lyStart: 'کارتی خاڵەکەم دەست پێبکە', lyUseCard: 'زیادکردن بۆ کارتەکەم {c}', lyAddBtn: 'زیادکردن',
+      lyKeep: 'لەم مۆبایلەدا هەڵگیراوە. لە مۆبایلێکی تر، کۆدی {c} لە سەبەتەکەدا بنووسە.',
       lyStamps: '{n} لە {g} خاڵ', lyLeft: '{n} ی تر ماوە بۆ {r}', lyFull: 'کارتەکەت پڕە! داواکاری داهاتووت {r} وەردەگرێت.',
       lyReward: 'ئەم داواکارییە خەڵاتەکەتی تێدایە: {r}. لە کاتی پارەدان بە کاشێر بڵێ.', lyRewardUsed: 'خەڵاتەکە وەرگیرا — نۆشی گیان! کارتی نوێت دەستی پێکرد.',
       lyEarned: '+١ خاڵ بۆ ئەم داواکارییە!', lyPending: 'کاتێک داواکارییەکەت وەردەگریت خاڵەکە وەردەگریت.' },
@@ -253,18 +262,20 @@
   /* ── Opening hours, special days and last-order time (set by the owner) ── */
   function loadSchedule() { rpc('get_store_hours', {}).then(applySchedule).catch(() => { /* keep the built-in hours */ }); loadLoyalty(); }
 
-  /* ── Stamp card (016): the customer adds their phone to the order; 1 stamp per picked-up order ── */
-  const LY_PHONE_KEY = 'smashed-burger.loyaltyPhone.v1';
-  const LY_LAST_KEY = 'smashed-burger.loyaltyLast.v1';
+  /* ── Stamp card (016): no phone number or name — a card code like K7Q-3MX kept on this phone; 1 stamp per picked-up order ── */
+  const LY_CODE_KEY = 'smashed-burger.loyaltyCode.v1';   // this phone's card
+  const LY_LAST_KEY = 'smashed-burger.loyaltyLast.v1';   // its stamps last time, to show in the cart
+  const LY_OFF_KEY = 'smashed-burger.loyaltyOff.v1';     // '1' = the customer doesn't want a stamp card
   let LOY = null;   // { goal, reward, min_total } while the owner has it switched on
   let lyDraft = '';
   const store = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch { /* ignore */ } };
   const stored = (k) => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
-  // Iraqi mobile number in any common form (0750…, 750…, +964 750…, Arabic digits) → 07XXXXXXXXX, else null
-  function cleanPhone(v) {
-    const d = toLatinDigits(String(v || '')).replace(/\D/g, '').replace(/^(00964|964|0)/, '');
-    return /^7[3-9]\d{8}$/.test(d) ? '0' + d : null;
+  // What people type ("k7q-3mx", Arabic digits) → K7Q3MX, or null if it can't be a card code
+  function cleanCode(v) {
+    const c = toLatinDigits(String(v || '')).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return /^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$/.test(c) ? c : null;
   }
+  const showCode = (c) => String(c || '').slice(0, 3) + '‑' + String(c || '').slice(3);   // a hyphen that never breaks the code over two lines
   const rewardText = (r) => { r = r || (LOY && LOY.reward); return (r && (r[state.locale] || r.en)) || ''; };
   const fillIn = (k, o) => Object.keys(o).reduce((s, x) => s.replace('{' + x + '}', o[x]), L(k));
   function loadLoyalty() {
@@ -275,14 +286,26 @@
     }).catch(() => { /* not set up yet: no stamp card */ });
   }
   function saveLast(card) { if (card && card.goal) store(LY_LAST_KEY, JSON.stringify({ n: card.stamps, g: card.goal })); }
-  async function linkLoyalty(a, phone) {
-    const card = await rpc('set_order_loyalty', { p_id: a.id, p_token: a.token, p_phone: phone });
-    store(LY_PHONE_KEY, phone);
+  // Put an order on a card: code = a typed code, this phone's card, or null for a brand-new card
+  async function linkLoyalty(a, code) {
+    const card = await rpc('set_order_loyalty', { p_id: a.id, p_token: a.token, p_code: code || null });
+    if (card && card.code) store(LY_CODE_KEY, card.code);
     saveLast(card);
     return card;
   }
+  // After sending: a typed code that doesn't exist → say so; this phone's card gone → start a new one
+  async function linkAfterSend(a, typed) {
+    try { await linkLoyalty(a, typed || stored(LY_CODE_KEY)); }
+    catch (e) {
+      if (!/unknown card/.test(e.message)) return;
+      if (typed) { showToast(L('lyUnknown')); return; }
+      store(LY_CODE_KEY, '');
+      try { await linkLoyalty(a, null); } catch { /* the order is in; the card can be added on the order page */ }
+    }
+  }
 
-  // The phone box in the cart, under the table number
+  // The stamp card row in the cart, under the table number: a tick box, this phone's card, "Have a card code?"
+  let lyHaveOpen = false;
   const baseRenderCart = window.renderCart;
   window.renderCart = function () {
     const r = baseRenderCart.apply(this, arguments);
@@ -290,20 +313,36 @@
     if (LOY && footer && state.cart.length && !footer.querySelector('#lyCart')) {
       const table = footer.querySelector('#tableInput');
       const anchor = table ? table.closest('label') : footer.querySelector('[role="group"]');
+      const on = stored(LY_OFF_KEY) !== '1';
+      const code = stored(LY_CODE_KEY);
       let last = null;
       try { last = JSON.parse(stored(LY_LAST_KEY) || 'null'); } catch { /* ignore */ }
-      const sub = last && last.g ? fillIn('lyCartLast', { n: last.n, g: last.g }) : fillIn('lyCartSub', { g: LOY.goal, r: rewardText() });
+      const sub = code && last && last.g ? fillIn('lyCartCard', { c: showCode(code), n: last.n, g: last.g }) : fillIn('lyCartSub', { g: LOY.goal, r: rewardText() });
       if (anchor) anchor.insertAdjacentHTML('afterend',
-        '<label id="lyCart" class="mt-3 block rounded-xl bg-surfaceAlt px-3 py-2 ring-1 ring-edge/5 focus-within:ring-2 focus-within:ring-brand/60">' +
-          '<span class="flex items-center gap-3"><span class="text-base leading-none" aria-hidden="true">⭐</span><span class="text-sm font-semibold">' + esc(L('lyCartTitle')) + '</span>' +
-            '<input id="lyPhoneInput" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" dir="ltr" placeholder="0750 123 4567" value="' + esc(stored(LY_PHONE_KEY)) + '" ' +
-              'class="tnum ms-auto w-36 rounded-lg border-0 bg-surface px-2 py-1.5 text-center text-sm font-bold text-ink ring-1 ring-edge/10 placeholder:font-normal placeholder:text-muted focus:ring-brand/60" /></span>' +
-          '<span class="mt-1 block text-[11px] text-muted">' + esc(sub) + '</span>' +
-        '</label>');
+        '<div id="lyCart" class="mt-3 rounded-xl bg-surfaceAlt px-3 py-2 ring-1 ring-edge/5">' +
+          '<label class="flex items-center gap-3"><span class="text-base leading-none" aria-hidden="true">⭐</span><span class="text-sm font-semibold">' + esc(L('lyCartTitle')) + '</span>' +
+            '<input id="lyOnBox" type="checkbox" ' + (on ? 'checked' : '') + ' class="ms-auto h-5 w-5 accent-[#C4453A]" /></label>' +
+          (on ? '<p class="mt-1 text-[11px] text-muted" dir="auto">' + esc(sub) + '</p>' +
+            (lyHaveOpen
+              ? '<input id="lyCodeInput" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" dir="ltr" placeholder="' + esc(L('lyCodePh')) + '" ' +
+                  'class="tnum mt-2 w-full rounded-lg border-0 bg-surface px-3 py-2 text-center text-sm font-bold uppercase tracking-wider text-ink ring-1 ring-edge/10 placeholder:font-normal placeholder:text-muted focus:ring-2 focus:ring-brand/60" />'
+              : '<button type="button" data-ly-have class="mt-1 text-[11px] font-bold text-brand">' + esc(L('lyHave')) + '</button>') : '') +
+        '</div>');
     }
     return r;
   };
-  $('drawerFooter').addEventListener('input', (e) => { if (e.target.id === 'lyPhoneInput') store(LY_PHONE_KEY, e.target.value.trim()); });
+  $('drawerFooter').addEventListener('change', (e) => {
+    if (e.target.id !== 'lyOnBox') return;
+    store(LY_OFF_KEY, e.target.checked ? '' : '1');
+    renderCart();
+  });
+  $('drawerFooter').addEventListener('click', (e) => {
+    if (!e.target.closest('[data-ly-have]')) return;
+    lyHaveOpen = true;
+    renderCart();
+    const box = $('lyCodeInput');
+    if (box) box.focus();
+  });
 
   loadSchedule();
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') loadSchedule(); });
@@ -323,11 +362,12 @@
       if (input) input.focus();
       return;
     }
-    // Stamp card: an empty box is fine; a number that isn't a mobile number is stopped here
-    const lyBox = LOY && $('lyPhoneInput');
+    // Stamp card: on unless the customer unticked it. A typed code that can't be a card code is stopped here.
+    const lyOn = !!LOY && stored(LY_OFF_KEY) !== '1';
+    const lyBox = lyOn && $('lyCodeInput');
     const lyRaw = lyBox ? lyBox.value.trim() : '';
-    const lyPhone = lyRaw ? cleanPhone(lyRaw) : null;
-    if (lyRaw && !lyPhone) { showToast(L('lyBadPhone')); lyBox.focus(); return; }
+    const lyTyped = lyRaw ? cleanCode(lyRaw) : null;
+    if (lyRaw && !lyTyped) { showToast(L('lyBadCode')); lyBox.focus(); return; }
     // These need the customer's tap, so they happen before anything is awaited
     unlockAudio();
     const permAsk = pushSupported && Notification.permission === 'default' ? Notification.requestPermission().catch(() => 'default') : Promise.resolve();
@@ -351,7 +391,7 @@
       track('order/' + state.orderType);
       setActive({ id: res.id, token: res.token, code: res.code, at: Date.now() });
       // The order is in; the stamp card is a bonus, so a failure here never stops it
-      if (lyPhone) { try { await linkLoyalty(res, lyPhone); } catch { /* ignore */ } }
+      if (lyOn) { await linkAfterSend(res, lyTyped); lyHaveOpen = false; }
       lastStatus = null;
       current = null;
       state.cart = [];
@@ -573,17 +613,20 @@
                : '<span aria-hidden="true">🎉</span>') + esc(txt) + '</p>';
   }
 
-  /* ── 016: the stamp card on the order page (or a box to add the phone while it's still new / cooking) ── */
+  /* ── 016: the stamp card on the order page (or a way to put this order on a card while it's still new / cooking) ── */
   function loyaltyHtml(o) {
     const c = o.loyalty;
     if (!c) {
       if (!LOY || !['pending', 'accepted'].includes(o.status)) return '';
+      const mine = stored(LY_CODE_KEY);
       return '<div class="mt-5 rounded-2xl bg-surfaceAlt p-3 ring-1 ring-edge/5">' +
         '<p class="flex items-center gap-2 text-sm font-bold"><span aria-hidden="true">⭐</span>' + esc(L('lyAddTitle')) + '</p>' +
         '<p class="mt-0.5 text-[11px] text-muted">' + esc(fillIn('lyCartSub', { g: LOY.goal, r: rewardText() })) + '</p>' +
-        '<div class="mt-2 flex gap-2"><input data-ly-input type="tel" inputmode="tel" autocomplete="tel" maxlength="20" dir="ltr" placeholder="0750 123 4567" value="' + esc(lyDraft || stored(LY_PHONE_KEY)) + '" ' +
-          'class="tnum min-w-0 flex-1 rounded-xl border-0 bg-surface px-3 py-2.5 text-sm font-bold ring-1 ring-edge/10 placeholder:font-normal placeholder:text-muted focus:ring-2 focus:ring-brand/60" />' +
-          '<button type="button" data-ly-add class="shrink-0 rounded-xl bg-brand px-4 text-sm font-bold text-white transition active:scale-[.98]">' + esc(L('lyAddBtn')) + '</button></div>' +
+        '<button type="button" data-ly-add class="mt-2 w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white transition active:scale-[.98] disabled:opacity-60">' +
+          esc(mine ? fillIn('lyUseCard', { c: showCode(mine) }) : L('lyStart')) + '</button>' +
+        '<div class="mt-2 flex gap-2"><input data-ly-input type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" dir="ltr" placeholder="' + esc(L('lyHave')) + '" value="' + esc(lyDraft) + '" ' +
+          'class="tnum min-w-0 flex-1 rounded-xl border-0 bg-surface px-3 py-2 text-sm font-bold uppercase tracking-wider ring-1 ring-edge/10 placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-muted focus:ring-2 focus:ring-brand/60" />' +
+          '<button type="button" data-ly-add data-ly-typed class="shrink-0 rounded-xl bg-surface px-4 text-sm font-bold ring-1 ring-edge/10 transition active:scale-[.98] disabled:opacity-60">' + esc(L('lyAddBtn')) + '</button></div>' +
       '</div>';
     }
     saveLast(c);
@@ -600,10 +643,12 @@
           '<span class="grid h-7 w-7 place-items-center rounded-full text-xs font-bold ' + (i < n ? 'bg-brand text-white' : 'bg-surface text-muted ring-1 ring-edge/10') + '">' + (i < n ? '★' : '') + '</span>').join('') + '</div>'
       : '';
     return '<div class="mt-5 rounded-2xl p-4 text-center ring-1 ' + (tone ? 'ring-amber-400/60' : 'bg-surfaceAlt ring-edge/5') + '"' + (tone ? ' style="background:rgba(251,191,36,.14)"' : '') + '>' +
-      '<p class="text-[11px] font-bold uppercase tracking-wide text-muted">' + (tone ? '🎁 ' : '⭐ ') + esc(L('lyCartTitle')) + ' <span class="tnum" dir="ltr">··' + esc(c.phone_end) + '</span></p>' +
+      '<p class="text-[11px] font-bold uppercase tracking-wide text-muted">' + (tone ? '🎁 ' : '⭐ ') + esc(L('lyCartTitle')) +
+        ' <span class="tnum ms-1 rounded-md bg-surface px-1.5 py-0.5 tracking-wider text-ink ring-1 ring-edge/10" dir="ltr">' + esc(showCode(c.code)) + '</span></p>' +
       '<p class="mt-1 font-display text-2xl">' + esc(fillIn('lyStamps', { n: c.stamps, g: goal })) + '</p>' +
       dots +
       '<p class="mt-2 text-sm font-semibold">' + esc(line) + '</p>' +
+      '<p class="mt-2 text-[11px] text-muted">' + esc(fillIn('lyKeep', { c: showCode(c.code) })) + '</p>' +
     '</div>';
   }
   root.addEventListener('input', (e) => { if (e.target.matches('[data-ly-input]')) lyDraft = e.target.value; });
@@ -611,12 +656,20 @@
     const b = e.target.closest('[data-ly-add]');
     const a = getActive();
     if (!b || !a) return;
-    const box = root.querySelector('[data-ly-input]');
-    const phone = cleanPhone(box && box.value);
-    if (!phone) { showToast(L('lyBadPhone')); if (box) box.focus(); return; }
+    let code = null;
+    if (b.hasAttribute('data-ly-typed')) {
+      const box = root.querySelector('[data-ly-input]');
+      code = cleanCode(box && box.value);
+      if (!code) { showToast(L('lyBadCode')); if (box) box.focus(); return; }
+    }
     b.disabled = true;
-    try { await linkLoyalty(a, phone); lyDraft = ''; await poll(true); }
-    catch { showToast(L('fbErr')); b.disabled = false; }
+    try {
+      if (code) await linkLoyalty(a, code); else await linkAfterSend(a, null);
+      store(LY_OFF_KEY, '');
+      lyDraft = '';
+      await poll(true);
+      renderTracker();
+    } catch (err) { showToast(/unknown card/.test(err.message) ? L('lyUnknown') : L('fbErr')); b.disabled = false; }
   });
 
   /* ── Feedback once the order is ready / picked up (optional, only the owner reads it) ── */

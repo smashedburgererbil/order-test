@@ -465,8 +465,8 @@ let clockOffset = 0;
 // Columns added by later database updates are asked for only once the database has them
 // (42703 = no such column → ask again without them)
 const noColumn = (error) => error && error.code === '42703';
-// 012: is_test · 016: loyalty_phone, loyalty_reward — each is dropped from the query if the database doesn't have it
-let extraCols = ['is_test', 'loyalty_phone', 'loyalty_reward'];
+// 012: is_test · 016: loyalty_code, loyalty_reward — each is dropped from the query if the database doesn't have it
+let extraCols = ['is_test', 'loyalty_code', 'loyalty_reward'];
 const hasCol = (c) => extraCols.includes(c);
 async function withExtraCols(run, base) {
   for (;;) {
@@ -749,10 +749,11 @@ function readyActions(o) {
     '</div>';
 }
 
-// 016: the customer added their phone → stamp card; a full card → reward the cashier takes off the bill
+// 016: the order is on a stamp card (a code like K7Q-3MX, no personal data); a full card → reward the cashier takes off the bill
+const cardCode = (c) => String(c || '').slice(0, 3) + '-' + String(c || '').slice(3);
 function loyaltyHtml(o) {
-  if (!o.loyalty_phone) return '';
-  const end = '··' + String(o.loyalty_phone).slice(-4);
+  if (!o.loyalty_code) return '';
+  const end = cardCode(o.loyalty_code);
   if (o.loyalty_reward) {
     const r = state.loyalty && state.loyalty.reward;
     return '<div class="mt-3 flex items-start gap-2.5 rounded-2xl px-3 py-2.5 text-sm ring-1" style="background:rgb(var(--c-warn)/.14);border-color:transparent;--tw-ring-color:rgb(var(--c-warn)/.4)">' +
@@ -818,7 +819,7 @@ function renderBoard() {
     // Remove cards that left this column
     [...list.children].forEach((node) => { if (!wanted.has(node.dataset.order)) node.remove(); });
     items.forEach((o, idx) => {
-      const ver = [o.status, o.updated_at, state.draftMinutes[o.id], state.busy.has(o.id), state.lang, isStale(o), o.loyalty_phone, o.loyalty_reward,
+      const ver = [o.status, o.updated_at, state.draftMinutes[o.id], state.busy.has(o.id), state.lang, isStale(o), o.loyalty_code, o.loyalty_reward,
         o.loyalty_reward && state.loyalty ? JSON.stringify(state.loyalty.reward) : ''].join('|');
       let node = cardNodes.get(o.id);
       const fresh = !node || node.parentElement !== list;
@@ -887,7 +888,7 @@ function renderDone() {
           '<i data-lucide="' + (o.is_test ? 'undo-2' : 'flask-conical') + '" class="h-3.5 w-3.5"></i>' + esc(t(o.is_test ? 'unmarkTest' : 'markTest')) + '</button>'
       : '';
     // 016: what the stamp card got from this order
-    const loyal = o.loyalty_phone && o.status === 'collected' && (o.loyalty_reward || o.total >= ((state.loyalty && state.loyalty.min_total) || 0))
+    const loyal = o.loyalty_code && o.status === 'collected' && (o.loyalty_reward || o.total >= ((state.loyalty && state.loyalty.min_total) || 0))
       ? '<span class="rounded-full bg-surfaceAlt px-2 py-0.5 text-[11px] font-bold text-muted">' + (o.loyalty_reward ? '🎁 ' + esc(t('rewardUsed')) : '⭐ ' + esc(t('stampEarned'))) + '</span>'
       : '';
     return '<div class="rounded-2xl bg-surface p-3 ring-1 ring-edge/5' + (o.is_test ? ' opacity-60' : '') + '">' +

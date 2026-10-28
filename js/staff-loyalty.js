@@ -3,45 +3,45 @@
 /* ====================================================================
  * Smashed Burger — stamp card / loyalty (☰ → Stamp card). Database update 016.
  * Loaded after staff.js (uses sb, state, t, esc, money, toast, openSheet, sheetHeader, closeSheet, renderAll).
- * Everyone on staff: look up a customer's card by phone, +1 stamp for a sale at the counter, −1 for a mistake,
+ * Everyone on staff: look up a customer's card by its code (no personal data), make a new card at the counter, +1 / −1 stamp,
  * give the reward when the card is full. Owner: switch it on, stamps needed, reward text, minimum order, numbers.
- * Orders with a phone get their stamp by themselves when they are picked up (see 016_queue_loyalty.sql).
+ * Orders on a card get their stamp by themselves when they are picked up (see 016_queue_loyalty.sql).
  * ==================================================================== */
 
 (function () {
   const TXT = {
     en: {
       lyTitle: 'Stamp card', lySub: 'Loyalty: one stamp for every picked-up order',
-      lyHow: 'Customers add their phone number when they order. Each picked-up order gives 1 stamp. With a full card, their next order shows 🎁 on this screen: take the reward off the bill when they pay.',
-      lyPhone: 'Customer phone', lyCheck: 'Check', lyStamps: '{n} of {g} stamps', lyFull: 'Card full — reward: {r}', lyLeft: '{n} more for: {r}',
+      lyHow: 'No phone number or name: each customer gets a card code like K7Q-3MX, kept on their phone. Each picked-up order gives 1 stamp. With a full card, their next order shows 🎁 on this screen: take the reward off the bill when they pay.',
+      lyPhone: 'Card code', lyCheck: 'Check', lyNewCard: 'New card for a customer at the counter', lyNewMade: 'New card — give the customer this code. They can type it in the menu to keep collecting.', lyStamps: '{n} of {g} stamps', lyFull: 'Card full — reward: {r}', lyLeft: '{n} more for: {r}',
       lyOrders: 'orders', lyRewards: 'rewards', lyNew: 'New card', lyAdd: '+1 stamp', lyAddSub: 'a sale at the counter', lyRemove: '−1', lyGive: 'Give reward',
-      lyGiveConfirm: 'Give the reward now and use the full card?', lyGiven1: 'Reward given — card starts again', lyBadPhone: 'Enter a mobile number like 0750 123 4567',
+      lyGiveConfirm: 'Give the reward now and use the full card?', lyGiven1: 'Reward given — card starts again', lyBadPhone: 'No card with that code — check the code on the customer’s phone',
       lyOffStaff: 'The stamp card is off. The owner can turn it on.', lyOffOwner: 'The stamp card is off — customers don’t see it yet. Turn it on below.',
-      lySettings: 'Settings', lyOn: 'Stamp card on', lyOnSub: 'Customers can add their phone number when they order',
+      lySettings: 'Settings', lyOn: 'Stamp card on', lyOnSub: 'Customers collect stamps when they order (no phone number needed)',
       lyGoal: 'Stamps for a reward', lyReward: 'Reward', lyRewardSub: 'What the customer gets, in each language', lyMin: 'Minimum order for a stamp (IQD)', lyMinSub: '0 = every order counts',
       lySave: 'Save settings', lySaved: 'Stamp card settings saved', lyNumbers: 'Numbers', lyCards: 'cards', lyFullCards: 'full cards', lyGiven: 'rewards given', lyOut: 'stamps collected',
       lyTop: 'Best customers', lyNone: 'No cards yet', lyNotReady: 'The stamp card needs database update 016 first', lyRewardNeeded: 'Write the reward in English at least',
     },
     ar: {
       lyTitle: 'بطاقة الأختام', lySub: 'برنامج الولاء: ختم لكل طلب يتم استلامه',
-      lyHow: 'يضيف الزبائن رقم هاتفهم عند الطلب. كل طلب يتم استلامه يعطي ختماً واحداً. عند امتلاء البطاقة يظهر 🎁 على طلبهم التالي في هذه الشاشة: اخصم المكافأة من الفاتورة عند الدفع.',
-      lyPhone: 'هاتف الزبون', lyCheck: 'تحقق', lyStamps: '{n} من {g} أختام', lyFull: 'البطاقة ممتلئة — المكافأة: {r}', lyLeft: 'باقي {n} للحصول على: {r}',
+      lyHow: 'بدون رقم هاتف أو اسم: يحصل كل زبون على رمز بطاقة مثل K7Q-3MX محفوظ على هاتفه. كل طلب يتم استلامه يعطي ختماً واحداً. عند امتلاء البطاقة يظهر 🎁 على طلبهم التالي في هذه الشاشة: اخصم المكافأة من الفاتورة عند الدفع.',
+      lyPhone: 'رمز البطاقة', lyCheck: 'تحقق', lyNewCard: 'بطاقة جديدة لزبون عند الكاشير', lyNewMade: 'بطاقة جديدة — أعطِ الزبون هذا الرمز. يستطيع كتابته في القائمة ليواصل جمع الأختام.', lyStamps: '{n} من {g} أختام', lyFull: 'البطاقة ممتلئة — المكافأة: {r}', lyLeft: 'باقي {n} للحصول على: {r}',
       lyOrders: 'طلبات', lyRewards: 'مكافآت', lyNew: 'بطاقة جديدة', lyAdd: '+١ ختم', lyAddSub: 'شراء من الكاشير', lyRemove: '−١', lyGive: 'منح المكافأة',
-      lyGiveConfirm: 'منح المكافأة الآن واستخدام البطاقة الممتلئة؟', lyGiven1: 'تم منح المكافأة — تبدأ البطاقة من جديد', lyBadPhone: 'أدخل رقم موبايل مثل 0750 123 4567',
+      lyGiveConfirm: 'منح المكافأة الآن واستخدام البطاقة الممتلئة؟', lyGiven1: 'تم منح المكافأة — تبدأ البطاقة من جديد', lyBadPhone: 'لا توجد بطاقة بهذا الرمز — تحقق من الرمز على هاتف الزبون',
       lyOffStaff: 'بطاقة الأختام متوقفة. يستطيع المالك تشغيلها.', lyOffOwner: 'بطاقة الأختام متوقفة — الزبائن لا يرونها بعد. شغّلها في الأسفل.',
-      lySettings: 'الإعدادات', lyOn: 'تشغيل بطاقة الأختام', lyOnSub: 'يستطيع الزبائن إضافة رقم هاتفهم عند الطلب',
+      lySettings: 'الإعدادات', lyOn: 'تشغيل بطاقة الأختام', lyOnSub: 'يجمع الزبائن الأختام عند الطلب (بدون رقم هاتف)',
       lyGoal: 'عدد الأختام للمكافأة', lyReward: 'المكافأة', lyRewardSub: 'ما يحصل عليه الزبون، بكل لغة', lyMin: 'أقل مبلغ للطلب ليحصل على ختم (دينار)', lyMinSub: '0 = كل طلب يُحسب',
       lySave: 'حفظ الإعدادات', lySaved: 'تم حفظ إعدادات بطاقة الأختام', lyNumbers: 'الأرقام', lyCards: 'بطاقات', lyFullCards: 'بطاقات ممتلئة', lyGiven: 'مكافآت ممنوحة', lyOut: 'أختام مجمّعة',
       lyTop: 'أفضل الزبائن', lyNone: 'لا توجد بطاقات بعد', lyNotReady: 'بطاقة الأختام تحتاج تحديث قاعدة البيانات 016 أولاً', lyRewardNeeded: 'اكتب المكافأة بالإنجليزية على الأقل',
     },
     ku: {
       lyTitle: 'کارتی خاڵ', lySub: 'دڵسۆزی: بۆ هەر داواکارییەکی وەرگیراو یەک خاڵ',
-      lyHow: 'کڕیاران لە کاتی داواکردن ژمارەی مۆبایلیان زیاد دەکەن. هەر داواکارییەکی وەرگیراو ١ خاڵ دەدات. کە کارتەکە پڕ بوو، داواکاری داهاتوویان لەم شاشەیە 🎁ـی لەسەرە: لە کاتی پارەدان خەڵاتەکە لە پسوڵەکە لاببە.',
-      lyPhone: 'ژمارەی مۆبایلی کڕیار', lyCheck: 'پشکنین', lyStamps: '{n} لە {g} خاڵ', lyFull: 'کارتەکە پڕە — خەڵات: {r}', lyLeft: '{n} ی تر ماوە بۆ: {r}',
+      lyHow: 'بەبێ ژمارەی مۆبایل یان ناو: هەر کڕیارێک کۆدی کارتێک وەردەگرێت وەک K7Q-3MX کە لە مۆبایلەکەیدا هەڵدەگیرێت. هەر داواکارییەکی وەرگیراو ١ خاڵ دەدات. کە کارتەکە پڕ بوو، داواکاری داهاتوویان لەم شاشەیە 🎁ـی لەسەرە: لە کاتی پارەدان خەڵاتەکە لە پسوڵەکە لاببە.',
+      lyPhone: 'کۆدی کارت', lyCheck: 'پشکنین', lyNewCard: 'کارتی نوێ بۆ کڕیارێک لە کاشێر', lyNewMade: 'کارتی نوێ — ئەم کۆدە بدە بە کڕیار. دەتوانێت لە مینیوکەدا بینووسێت بۆ ئەوەی خاڵ کۆبکاتەوە.', lyStamps: '{n} لە {g} خاڵ', lyFull: 'کارتەکە پڕە — خەڵات: {r}', lyLeft: '{n} ی تر ماوە بۆ: {r}',
       lyOrders: 'داواکاری', lyRewards: 'خەڵات', lyNew: 'کارتی نوێ', lyAdd: '+١ خاڵ', lyAddSub: 'کڕینێک لە کاشێر', lyRemove: '−١', lyGive: 'پێدانی خەڵات',
-      lyGiveConfirm: 'ئێستا خەڵاتەکە بدرێت و کارتە پڕەکە بەکاربهێنرێت؟', lyGiven1: 'خەڵات درا — کارتەکە لە سەرەتاوە دەست پێدەکاتەوە', lyBadPhone: 'ژمارەیەکی مۆبایل بنووسە وەک 0750 123 4567',
+      lyGiveConfirm: 'ئێستا خەڵاتەکە بدرێت و کارتە پڕەکە بەکاربهێنرێت؟', lyGiven1: 'خەڵات درا — کارتەکە لە سەرەتاوە دەست پێدەکاتەوە', lyBadPhone: 'هیچ کارتێک بەم کۆدە نییە — کۆدەکە لە مۆبایلی کڕیار بپشکنە',
       lyOffStaff: 'کارتی خاڵ کوژاوەتەوە. خاوەن دەتوانێت هەڵیبکات.', lyOffOwner: 'کارتی خاڵ کوژاوەتەوە — کڕیاران هێشتا نایبینن. لە خوارەوە هەڵیبکە.',
-      lySettings: 'ڕێکخستنەکان', lyOn: 'کارتی خاڵ هەڵکراوە', lyOnSub: 'کڕیاران دەتوانن لە کاتی داواکردن ژمارەی مۆبایلیان زیاد بکەن',
+      lySettings: 'ڕێکخستنەکان', lyOn: 'کارتی خاڵ هەڵکراوە', lyOnSub: 'کڕیاران لە کاتی داواکردن خاڵ کۆدەکەنەوە (بێ ژمارەی مۆبایل)',
       lyGoal: 'ژمارەی خاڵ بۆ خەڵات', lyReward: 'خەڵات', lyRewardSub: 'ئەوەی کڕیار وەریدەگرێت، بە هەر زمانێک', lyMin: 'کەمترین بڕی داواکاری بۆ خاڵ (دینار)', lyMinSub: '0 = هەموو داواکارییەک دەژمێردرێت',
       lySave: 'پاشەکەوتکردنی ڕێکخستنەکان', lySaved: 'ڕێکخستنەکانی کارتی خاڵ پاشەکەوت کران', lyNumbers: 'ژمارەکان', lyCards: 'کارت', lyFullCards: 'کارتی پڕ', lyGiven: 'خەڵاتی دراو', lyOut: 'خاڵی کۆکراوە',
       lyTop: 'باشترین کڕیاران', lyNone: 'هێشتا هیچ کارتێک نییە', lyNotReady: 'کارتی خاڵ پێویستی بە نوێکردنەوەی داتابەیسی 016 هەیە', lyRewardNeeded: 'لانیکەم خەڵاتەکە بە ئینگلیزی بنووسە',
@@ -49,7 +49,8 @@
   };
   for (const l of Object.keys(TXT)) Object.assign(I18N[l], TXT[l]);
 
-  const LY = { phone: '', card: null, admin: null };
+  const LY = { code: '', card: null, admin: null };
+  const cardCode = (c) => String(c || '').slice(0, 3) + '-' + String(c || '').slice(3);
   const field = 'w-full rounded-xl border-0 bg-surfaceAlt px-3 py-2.5 text-sm ring-1 ring-edge/5 focus:ring-2 focus:ring-brand/60';
   const rewardOf = (r) => (r && (r[state.lang] || r.en)) || '';
   const fill = (k, o) => Object.keys(o).reduce((s, x) => s.replace('{' + x + '}', o[x]), t(k));
@@ -96,7 +97,8 @@
     const reward = rewardOf(c.reward || (state.loyalty && state.loyalty.reward));
     return '<div class="mt-3 rounded-2xl bg-surfaceAlt p-4 ring-1 ' + (full ? 'ring-[rgb(var(--c-warn)/.5)]' : 'ring-edge/5') + '">' +
       '<div class="flex items-baseline justify-between gap-2"><p class="font-display text-2xl">' + esc(fill('lyStamps', { n: c.stamps, g: goal })) + '</p>' +
-        '<span class="text-xs text-muted" dir="ltr">··' + esc(c.phone_end) + (c.new ? ' · ' + esc(t('lyNew')) : '') + '</span></div>' +
+        '<span data-ly-cardcode class="tnum rounded-lg bg-surface px-2 py-1 text-sm font-extrabold tracking-wider ring-1 ring-edge/10" dir="ltr">' + esc(cardCode(c.code)) + '</span></div>' +
+      (c.new ? '<p class="mt-2 rounded-lg bg-brand/10 px-2.5 py-1.5 text-[11px] font-semibold text-brand">' + esc(t('lyNewMade')) + '</p>' : '') +
       '<p class="mt-0.5 text-xs font-semibold ' + (full ? '' : 'text-muted') + '"' + (full ? ' style="color:rgb(var(--c-warn))"' : '') + '>' +
         esc(full ? fill('lyFull', { r: reward }) : fill('lyLeft', { n: goal - c.stamps, r: reward })) + '</p>' +
       dots(Math.min(c.stamps, goal), goal) +
@@ -114,8 +116,8 @@
     if (!a) return '';
     const tile = (n, label) => '<div class="rounded-2xl bg-surfaceAlt p-3 ring-1 ring-edge/5"><p class="font-display text-xl">' + esc(n) + '</p><p class="text-[11px] text-muted">' + esc(label) + '</p></div>';
     const top = (a.top || []).map((x) =>
-      '<button type="button" data-ly-phone="' + esc(x.phone) + '" class="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-start text-sm transition hover:bg-edge/5">' +
-        '<span class="tnum flex-1 font-semibold" dir="ltr">' + esc(x.phone) + '</span>' +
+      '<button type="button" data-ly-code="' + esc(x.code) + '" class="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-start text-sm transition hover:bg-edge/5">' +
+        '<span class="tnum flex-1 font-semibold tracking-wider" dir="ltr">' + esc(cardCode(x.code)) + '</span>' +
         '<span class="text-[11px] text-muted"><span class="tnum font-bold text-ink">' + x.orders + '</span> ' + esc(t('lyOrders')) + '</span>' +
         '<span class="tnum w-14 text-end text-xs font-bold" dir="ltr">' + x.stamps + '/' + a.goal + '</span>' +
         (x.rewards_given ? '<span class="text-xs" title="' + esc(t('lyRewards')) + '">🎁' + x.rewards_given + '</span>' : '<span class="w-6"></span>') +
@@ -154,17 +156,19 @@
         (on ? '' : '<p class="mb-3 rounded-xl px-3 py-2.5 text-xs font-semibold" style="background:rgb(var(--c-warn)/.14);color:rgb(var(--c-warn))">' + esc(t(admin ? 'lyOffOwner' : 'lyOffStaff')) + '</p>') +
         '<p class="text-[11px] text-muted">' + esc(t('lyHow')) + '</p>' +
         '<form id="lyLookup" class="mt-3 flex gap-2">' +
-          '<input id="lyPhone" type="tel" inputmode="tel" autocomplete="off" dir="ltr" placeholder="0750 123 4567" aria-label="' + esc(t('lyPhone')) + '" value="' + esc(LY.phone) + '" class="' + field + '" />' +
+          '<input id="lyPhone" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" dir="ltr" placeholder="K7Q-3MX" aria-label="' + esc(t('lyPhone')) + '" value="' + esc(LY.code ? cardCode(LY.code) : '') + '" class="tnum uppercase tracking-wider ' + field + '" />' +
           '<button type="submit" class="shrink-0 rounded-xl bg-ink px-4 text-sm font-bold text-surface transition active:scale-[.98]">' + esc(t('lyCheck')) + '</button>' +
         '</form>' +
+        '<button type="button" data-ly-new class="mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-muted ring-1 ring-edge/10 transition hover:text-ink"><i data-lucide="plus" class="h-3.5 w-3.5"></i>' + esc(t('lyNewCard')) + '</button>' +
         cardBox() +
         ownerPart() +
       '</div>');
 
     $('lyLookup').onsubmit = (e) => { e.preventDefault(); lookup($('lyPhone').value); };
     $('sheetPanel').onclick = async (e) => {
-      const p = e.target.closest('[data-ly-phone]');
-      if (p) { lookup(p.dataset.lyPhone); $('lyBody').scrollTop = 0; return; }
+      const p = e.target.closest('[data-ly-code]');
+      if (p) { lookup(p.dataset.lyCode); $('lyBody').scrollTop = 0; return; }
+      if (e.target.closest('[data-ly-new]')) { newCard(); return; }
       const b = e.target.closest('[data-ly]');
       if (b) { change(b.dataset.ly); return; }
       if (e.target.closest('#lyOn') && LY.admin) {
@@ -177,19 +181,29 @@
     if ($('lyForm')) $('lyForm').onsubmit = (e) => { e.preventDefault(); save(new FormData(e.target)); };
   }
 
-  async function lookup(phone) {
-    LY.phone = String(phone || '').trim();
-    if (!LY.phone) return;
-    const { data, error } = await sb.rpc('staff_loyalty_lookup', { p_phone: LY.phone });
-    if (error) { toast(/bad phone/.test(error.message || '') ? t('lyBadPhone') : t('actionFailed'), 3000); return; }
+  async function lookup(code) {
+    const v = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!v) return;
+    const { data, error } = await sb.rpc('staff_loyalty_lookup', { p_code: v });
+    if (error) { toast(/unknown card/.test(error.message || '') ? t('lyBadPhone') : t('actionFailed'), 3000); return; }
+    LY.code = data.code;
+    LY.card = data;
+    render();
+  }
+
+  // A card for someone buying at the counter: they type the code into the menu on their phone later
+  async function newCard() {
+    const { data, error } = await sb.rpc('staff_loyalty_new');
+    if (error) { toast(t('actionFailed')); return; }
+    LY.code = data.code;
     LY.card = data;
     render();
   }
 
   async function change(action) {
-    if (!LY.card || !LY.phone) return;
+    if (!LY.card || !LY.code) return;
     if (action === 'reward' && !confirm(t('lyGiveConfirm'))) return;
-    const { data, error } = await sb.rpc('staff_loyalty_change', { p_phone: LY.phone, p_action: action });
+    const { data, error } = await sb.rpc('staff_loyalty_change', { p_code: LY.code, p_action: action });
     if (error) { toast(t('actionFailed')); return; }
     LY.card = data;
     if (action === 'reward') toast(t('lyGiven1'));
