@@ -43,6 +43,7 @@ $('tvLoginForm').addEventListener('submit', async (e) => {
 $('tvStartBtn').addEventListener('click', async () => {
   try { audio = new (window.AudioContext || window.webkitAudioContext)(); await audio.resume(); } catch { /* no sound */ }
   tone(1046, 0, 0.2, 0.15);
+  queue.length = 0;   // orders that became ready while this screen waited for the tap are not announced late
   started = true;
   try { await document.documentElement.requestFullscreen(); } catch { /* not allowed */ }
   try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch { /* ignore */ }
@@ -58,6 +59,7 @@ function todayStartISO() {
   return new Date(Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate()) - 3 * 3600 * 1000).toISOString();
 }
 
+let loadedOnce = false;
 async function load() {
   const { data, error } = await sb.from('orders').select('id,code,status,ready_marked_at,accepted_at,updated_at')
     .gte('created_at', todayStartISO()).in('status', ['accepted', 'ready']);
@@ -65,12 +67,18 @@ async function load() {
   const fresh = new Map();
   for (const o of data) {
     fresh.set(o.id, o);
-    // Orders already ready when the screen starts don't get a big announcement
-    if (o.status === 'ready' && !orders.size) announced.add(o.id + o.updated_at);
+    const key = o.id + o.updated_at;
+    if (o.status !== 'ready' || announced.has(key)) continue;
+    announced.add(key);
+    // Orders already ready when the screen starts don't get a big announcement.
+    // After that, a "ready" the live feed missed (Wi-Fi drop, screen asleep) is announced now.
+    if (loadedOnce) queue.push(o.code);
   }
+  loadedOnce = true;
   orders.clear();
   fresh.forEach((v, k) => orders.set(k, v));
   render();
+  if (queue.length) playQueue();
 }
 
 function onChange(row) {
@@ -130,21 +138,32 @@ function setLive(on) {
 }
 
 let channel = null;
-function subscribe() {
-  if (channel) sb.removeChannel(channel);
+let live = false;
+async function subscribe() {
+  // Fully close the old connection before opening a new one (re-using the same name too early can fail)
+  if (channel) { const old = channel; channel = null; try { await sb.removeChannel(old); } catch { /* ignore */ } }
+  live = false;
   channel = sb.channel('tv-orders')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (p) => onChange(p.new))
     .subscribe((status) => {
-      if (status === 'SUBSCRIBED') { setLive(true); load(); }
-      else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) setLive(false);
+      if (status === 'SUBSCRIBED') { live = true; setLive(true); load(); }
+      else if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) { live = false; setLive(false); }
     });
 }
 setInterval(() => { if (started) load(); }, 20000);
 window.addEventListener('online', subscribe);
+// Same as the staff screen: TVs and iPads pause the connection when asleep. Reconnect when visible, and keep retrying while down.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && loadedOnce) { load(); if (!live) subscribe(); }
+});
+setInterval(() => { if (loadedOnce && !live && navigator.onLine !== false) subscribe(); }, 15000);
 
 setInterval(() => {
   $('tvClock').textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Baghdad' });
 }, 1000);
+
+// Login ended elsewhere (e.g. "Sign out all devices" on the staff screen): back to the sign-in box
+sb.auth.onAuthStateChange((event) => { if (event === 'SIGNED_OUT') { started = false; show('tvLogin'); } });
 
 async function boot() {
   const { data: { session } } = await sb.auth.getSession();

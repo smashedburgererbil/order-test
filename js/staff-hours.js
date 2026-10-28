@@ -17,6 +17,9 @@
       hrDate: 'Date', hrNote: 'Name (e.g. Eid)', hrAdd: 'Add', hrRemove: 'Remove', hrNone: 'No special days yet',
       hrBad: 'Fill in opening and closing time for every open day', hrNotReady: 'Opening hours need database update 009 first',
       hrMidnight: 'Closing 00:00 = midnight at the end of the day', hrDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      hrOrdering: 'Ordering', hrTesting: 'Testing', hrEnforce: 'Only take orders during opening hours',
+      hrEnforceOff: 'Off = orders are taken at any time (for testing). The menu then shows Open.',
+      hrQr: 'Table orders need the QR code on the table', hrQrOff: 'Off = anyone can type a table number (for testing)',
     },
     ar: {
       hrTitle: 'ساعات العمل', hrSub: 'بتوقيت بغداد · قائمة الزبائن والطلبات تتبع هذه الساعات',
@@ -25,6 +28,9 @@
       hrDate: 'التاريخ', hrNote: 'الاسم (مثلاً العيد)', hrAdd: 'إضافة', hrRemove: 'حذف', hrNone: 'لا توجد أيام خاصة بعد',
       hrBad: 'أدخل وقت الفتح والإغلاق لكل يوم مفتوح', hrNotReady: 'ساعات العمل تحتاج تحديث قاعدة البيانات 009 أولاً',
       hrMidnight: 'الإغلاق 00:00 = منتصف الليل في نهاية اليوم', hrDays: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+      hrOrdering: 'الطلبات', hrTesting: 'تجربة', hrEnforce: 'استقبال الطلبات خلال ساعات العمل فقط',
+      hrEnforceOff: 'إيقاف = تُقبل الطلبات في أي وقت (للتجربة)، وتظهر القائمة «مفتوح».',
+      hrQr: 'طلبات الطاولات تحتاج رمز QR الموجود على الطاولة', hrQrOff: 'إيقاف = يمكن لأي شخص كتابة رقم الطاولة (للتجربة)',
     },
     ku: {
       hrTitle: 'کاتی کارکردن', hrSub: 'بە کاتی بەغدا · لیستی کڕیاران و داواکاری بەم کاتانە دەڕۆن',
@@ -33,6 +39,9 @@
       hrDate: 'بەروار', hrNote: 'ناو (بۆ نموونە جەژن)', hrAdd: 'زیادکردن', hrRemove: 'سڕینەوە', hrNone: 'هێشتا هیچ ڕۆژێکی تایبەت نییە',
       hrBad: 'کاتی کردنەوە و داخستن بۆ هەموو ڕۆژێکی کراوە بنووسە', hrNotReady: 'کاتی کارکردن پێویستی بە نوێکردنەوەی داتابەیسی 009 هەیە',
       hrMidnight: 'داخستنی 00:00 = نیوەشەو لە کۆتایی ڕۆژەکە', hrDays: ['یەکشەممە', 'دووشەممە', 'سێشەممە', 'چوارشەممە', 'پێنجشەممە', 'هەینی', 'شەممە'],
+      hrOrdering: 'داواکاری', hrTesting: 'تاقیکردنەوە', hrEnforce: 'تەنها لە کاتی کارکردندا داواکاری وەربگرە',
+      hrEnforceOff: 'کوژاوە = داواکاری لە هەموو کاتێکدا وەردەگیرێت (بۆ تاقیکردنەوە)، مینیوکەش «کراوە» پیشان دەدات.',
+      hrQr: 'داواکاری مێز پێویستی بە کۆدی QRـی سەر مێزەکە هەیە', hrQrOff: 'کوژاوە = هەر کەسێک دەتوانێت ژمارەی مێز بنووسێت (بۆ تاقیکردنەوە)',
     },
   };
   for (const l of Object.keys(TXT)) Object.assign(I18N[l], TXT[l]);
@@ -66,8 +75,9 @@
   async function openHours() {
     $('sheetPanel').onclick = null;
     openSheet(sheetHeader(t('hrTitle'), t('hrSub')) + '<div class="grid place-items-center py-12"><i data-lucide="loader-2" class="h-6 w-6 animate-spin text-brand"></i></div>');
-    const { data, error } = await sb.rpc('get_store_hours');
+    const [{ data, error }, rulesRes] = await Promise.all([sb.rpc('get_store_hours'), sb.rpc('admin_order_rules')]);
     if (error || !data) { closeSheet(); toast(/get_store_hours/.test((error && error.message) || '') ? t('hrNotReady') : t('actionFailed'), 3500); return; }
+    const rules = !rulesRes.error && rulesRes.data ? rulesRes.data : null;   // null before database update 015
     const week = data.week || [];
     const special = data.special || [];
     const lastOpts = [0, 10, 15, 20, 30, 45, 60];
@@ -90,8 +100,26 @@
         '<button type="button" data-del="' + esc(x.day) + '" class="rounded-lg px-2 py-1 text-[11px] font-bold text-brand transition hover:bg-brand/10">' + esc(t('hrRemove')) + '</button>' +
       '</div>';
 
+    // 015: the two ordering switches (they save straight away). "Testing" shows while one is off.
+    const ruleRow = (key, on, label, offText) =>
+      '<button type="button" data-rule="' + key + '" role="switch" aria-checked="' + on + '" class="flex w-full items-center gap-3 px-3 py-2.5 text-start">' +
+        '<span class="min-w-0 flex-1"><span class="block text-sm font-semibold">' + esc(t(label)) + '</span>' +
+          '<span class="block text-[11px] text-muted">' + esc(t(offText)) + '</span></span>' +
+        '<span class="switch ' + (on ? 'is-on' : '') + '" aria-hidden="true"></span></button>';
+    const testing = rules && (!rules.enforce_hours || !rules.require_table_token);
+    const ordering = rules
+      ? '<div class="mb-5">' +
+          '<h4 class="flex items-center gap-2 text-sm font-bold">' + esc(t('hrOrdering')) +
+            '<span id="hrTestBadge" class="' + (testing ? '' : 'hidden ') + 'rounded-full bg-[rgb(var(--c-warn)/.15)] px-2 py-0.5 text-[10px] font-extrabold uppercase" style="color:rgb(var(--c-warn))"><i data-lucide="flask-conical" class="me-0.5 inline h-3 w-3 align-[-2px]"></i>' + esc(t('hrTesting')) + '</span></h4>' +
+          '<div class="mt-2 divide-y divide-edge/5 rounded-xl bg-surfaceAlt ring-1 ring-edge/5">' +
+            ruleRow('enforce_hours', rules.enforce_hours, 'hrEnforce', 'hrEnforceOff') +
+            ruleRow('require_table_token', rules.require_table_token, 'hrQr', 'hrQrOff') +
+          '</div></div>'
+      : '';
+
     openSheet(sheetHeader(t('hrTitle'), t('hrSub')) +
       '<div class="overflow-y-auto px-5 py-4">' +
+        ordering +
         '<h4 class="text-sm font-bold">' + esc(t('hrWeek')) + '</h4>' +
         '<div id="hrWeek" class="mt-1 divide-y divide-edge/5">' + week.map(dayRow).join('') + '</div>' +
         '<p class="mt-1 text-[11px] text-muted">' + esc(t('hrMidnight')) + '</p>' +
@@ -144,6 +172,22 @@
     };
 
     $('sheetPanel').onclick = async (e) => {
+      const r = e.target.closest('[data-rule]');
+      if (r && rules) {
+        if (r.dataset.busy) return;
+        const key = r.dataset.rule;
+        const next = !rules[key];
+        r.dataset.busy = '1';
+        const { error: err } = await sb.rpc('admin_set_order_rules', key === 'enforce_hours' ? { p_enforce_hours: next } : { p_require_table_token: next });
+        delete r.dataset.busy;
+        if (err) { toast(t('actionFailed')); return; }
+        rules[key] = next;
+        r.setAttribute('aria-checked', String(next));
+        r.querySelector('.switch').classList.toggle('is-on', next);
+        $('hrTestBadge').classList.toggle('hidden', rules.enforce_hours && rules.require_table_token);
+        toast(t('hrSaved'));
+        return;
+      }
       const d = e.target.closest('[data-del]');
       if (!d) return;
       const { error: err } = await sb.rpc('admin_delete_special_day', { p_day: d.getAttribute('data-del') });

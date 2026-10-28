@@ -52,6 +52,10 @@ const I18N = {
     newOrderNotif: 'New order', adminOnly: 'Admins only',
     monthlySales: 'Monthly sales', monthTotal: 'Month total', perDay: 'Average per day', bestDay: 'Best day', ordersShort: 'orders', noSales: 'No sales', dayDetails: 'Day details', allDays: 'Every day this month',
     signOutConfirm: 'Sign out of this device? You will need the password to sign in again.', reconnecting: 'Connecting to the order system…',
+    testBadge: 'TEST', markTest: 'Test order', unmarkTest: 'Count it', testHint: 'Test orders are left out of sales and reports',
+    markedTest: 'Marked as a test order — left out of sales', unmarkedTest: 'Counted in sales again',
+    soldOutSince: 'since {t}', soldOutBy: 'by {n}', allBackOn: 'Switch all back on', allBackOnConfirm: 'Switch every sold-out item back on?',
+    autoReset: 'Back on every morning', autoResetSub: 'At 9:00 every sold-out item is switched back on by itself', autoResetOwner: 'Only the owner can change this', saved: 'Saved',
   },
   ku: {
     dir: 'rtl', short: 'ک', native: 'کوردی',
@@ -87,6 +91,10 @@ const I18N = {
     newOrderNotif: 'داواکاری نوێ', adminOnly: 'تەنها بەڕێوەبەر',
     monthlySales: 'فرۆشتنی مانگانە', monthTotal: 'کۆی مانگ', perDay: 'تێکڕای ڕۆژانە', bestDay: 'باشترین ڕۆژ', ordersShort: 'داواکاری', noSales: 'فرۆشتن نییە', dayDetails: 'وردەکاری ڕۆژ', allDays: 'هەموو ڕۆژەکانی ئەم مانگە',
     signOutConfirm: 'لەم ئامێرە بچیتە دەرەوە؟ بۆ چوونەژوورەوەی دووبارە پێویستت بە وشەی نهێنی دەبێت.', reconnecting: 'پەیوەندی بە سیستەمی داواکاری دەکرێت…',
+    testBadge: 'تاقیکاری', markTest: 'داواکاری تاقیکاری', unmarkTest: 'بیژمێرە', testHint: 'داواکارییە تاقیکارییەکان لە فرۆشتن و ڕاپۆرتەکان ناژمێردرێن',
+    markedTest: 'وەک داواکاری تاقیکاری دانرا — لە فرۆشتن ناژمێردرێت', unmarkedTest: 'دووبارە لە فرۆشتن دەژمێردرێت',
+    soldOutSince: 'لە {t}ەوە', soldOutBy: 'لەلایەن {n}', allBackOn: 'هەمووی هەڵبکەرەوە', allBackOnConfirm: 'هەموو خواردنە نەماوەکان دووبارە هەڵبکرێنەوە؟',
+    autoReset: 'هەموو بەیانییەک دووبارە هەڵدەکرێنەوە', autoResetSub: 'لە کاتژمێر ٩:٠٠ هەموو خواردنە نەماوەکان خۆیان هەڵدەکرێنەوە', autoResetOwner: 'تەنها خاوەن دەتوانێت ئەمە بگۆڕێت', saved: 'پاشەکەوت کرا',
   },
   ar: {
     dir: 'rtl', short: 'ع', native: 'العربية',
@@ -122,6 +130,10 @@ const I18N = {
     newOrderNotif: 'طلب جديد', adminOnly: 'للمدراء فقط',
     monthlySales: 'المبيعات الشهرية', monthTotal: 'إجمالي الشهر', perDay: 'المتوسط اليومي', bestDay: 'أفضل يوم', ordersShort: 'طلبات', noSales: 'لا مبيعات', dayDetails: 'تفاصيل اليوم', allDays: 'كل أيام هذا الشهر',
     signOutConfirm: 'تسجيل الخروج من هذا الجهاز؟ ستحتاج كلمة المرور للدخول مرة أخرى.', reconnecting: 'جارٍ الاتصال بنظام الطلبات…',
+    testBadge: 'تجريبي', markTest: 'طلب تجريبي', unmarkTest: 'احسبه', testHint: 'الطلبات التجريبية لا تُحسب في المبيعات والتقارير',
+    markedTest: 'تم تعليمه كطلب تجريبي — لا يُحسب في المبيعات', unmarkedTest: 'يُحسب في المبيعات مرة أخرى',
+    soldOutSince: 'منذ {t}', soldOutBy: 'بواسطة {n}', allBackOn: 'تشغيل الكل من جديد', allBackOnConfirm: 'إعادة كل الأصناف النافدة إلى متوفر؟',
+    autoReset: 'إعادة التشغيل كل صباح', autoResetSub: 'في الساعة 9:00 تعود كل الأصناف النافدة متوفرة تلقائياً', autoResetOwner: 'المالك فقط يستطيع تغيير هذا', saved: 'تم الحفظ',
   },
 };
 
@@ -141,6 +153,7 @@ const state = {
   online: false,
   shiftStarted: false,
   avail: {},              // item id -> available
+  soldInfo: {},           // item id -> { at, by } while sold out (database update 010)
   busy: new Set(),        // order ids with an action in flight
 };
 
@@ -376,7 +389,7 @@ async function afterLogin() {
   const alive = row ? await sb.rpc('is_staff') : { data: false };
   if (row && !alive.error && alive.data === false) { endSession(); return; }
   if (!row) {
-    await sb.auth.signOut();
+    await sb.auth.signOut({ scope: 'local' });
     show('loginView');
     $('loginError').textContent = t('notStaff');
     $('loginError').classList.remove('hidden');
@@ -428,10 +441,17 @@ function todayStartISO() {
 // Server clock vs this device's clock, so countdowns are right even if the iPad's clock is off
 let clockOffset = 0;
 
+// Columns added by later database updates are asked for only once the database has them
+// (42703 = no such column → ask again without them)
+const noColumn = (error) => error && error.code === '42703';
+let hasTestCol = true;   // 012: orders.is_test
+
 async function loadOrders() {
-  const { data, error } = await sb.from('orders').select(ORDER_COLS)
+  const query = (cols) => sb.from('orders').select(cols)
     .or('created_at.gte.' + todayStartISO() + ',status.in.(pending,accepted,ready)')
     .order('created_at', { ascending: true });
+  let { data, error } = await query(ORDER_COLS + (hasTestCol ? ',is_test' : ''));
+  if (noColumn(error) && hasTestCol) { hasTestCol = false; ({ data, error } = await query(ORDER_COLS)); }
   if (error) { setOnline(false); return; }
   const fresh = new Map();
   for (const o of data) fresh.set(o.id, o);
@@ -439,9 +459,11 @@ async function loadOrders() {
   renderAll();
 }
 
+let hasSoldOutCols = true;   // 010: who switched an item off, and when
 async function loadAvailability() {
-  const { data } = await sb.from('menu_items').select('id,available');
-  if (data) for (const r of data) state.avail[r.id] = r.available;
+  let { data, error } = await sb.from('menu_items').select('id,available' + (hasSoldOutCols ? ',sold_out_at,sold_out_by_name' : ''));
+  if (noColumn(error) && hasSoldOutCols) { hasSoldOutCols = false; ({ data } = await sb.from('menu_items').select('id,available')); }
+  if (data) for (const r of data) { state.avail[r.id] = r.available; state.soldInfo[r.id] = r.sold_out_at ? { at: r.sold_out_at, by: r.sold_out_by_name } : null; }
 }
 
 let channel = null;
@@ -786,24 +808,32 @@ function renderDone() {
     .filter((o) => ['collected', 'rejected', 'cancelled'].includes(o.status))
     .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at));
   $('doneCount').textContent = done.length;
+  const admin = state.me && state.me.role === 'admin';
   $('doneList').innerHTML = done.length ? done.map((o) => {
     const st = o.status === 'collected'
       ? '<span class="rounded-full px-2 py-0.5 text-[11px] font-bold" style="background:rgb(var(--c-ok)/.14);color:rgb(var(--c-ok))">' + esc(t('statusCollected')) + '</span>'
       : '<span class="rounded-full bg-brand/10 px-2 py-0.5 text-[11px] font-bold text-brand">' + esc(t(o.status === 'rejected' ? 'statusRejected' : 'statusCancelled')) + '</span>';
     const time = new Date(o.updated_at).toLocaleTimeString(state.lang === 'en' ? 'en-GB' : state.lang === 'ar' ? 'ar-IQ' : 'ckb-IQ', { hour: '2-digit', minute: '2-digit' });
-    return '<div class="rounded-2xl bg-surface p-3 ring-1 ring-edge/5">' +
-      '<div class="flex items-center gap-2"><span class="font-display text-xl tnum">#' + o.code + '</span>' + st +
+    // 012: the owner marks test orders, so they stay out of sales and reports
+    const testBadge = o.is_test ? '<span class="rounded-full bg-edge/10 px-2 py-0.5 text-[11px] font-bold text-muted" title="' + esc(t('testHint')) + '">' + esc(t('testBadge')) + '</span>' : '';
+    const testBtn = admin && hasTestCol && o.status === 'collected'
+      ? '<button type="button" data-test="' + o.id + '" title="' + esc(t('testHint')) + '" class="mt-2 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-muted ring-1 ring-edge/10 transition hover:text-ink">' +
+          '<i data-lucide="' + (o.is_test ? 'undo-2' : 'flask-conical') + '" class="h-3.5 w-3.5"></i>' + esc(t(o.is_test ? 'unmarkTest' : 'markTest')) + '</button>'
+      : '';
+    return '<div class="rounded-2xl bg-surface p-3 ring-1 ring-edge/5' + (o.is_test ? ' opacity-60' : '') + '">' +
+      '<div class="flex items-center gap-2"><span class="font-display text-xl tnum">#' + o.code + '</span>' + st + testBadge +
         '<span class="ms-auto text-xs text-muted tnum">' + esc(time) + '</span></div>' +
       '<p class="mt-1 text-xs text-muted">' + esc(placeLabel(o)) + ' · ' + esc(money(o.total)) + '</p>' +
       '<div class="mt-2 text-muted">' + itemsHtml(o, true) + '</div>' +
       (o.reject_reason ? '<p class="mt-2 text-xs italic text-brand">“' + esc(o.reject_reason) + '”</p>' : '') +
+      testBtn +
     '</div>';
   }).join('') : '<p class="col-span-full rounded-2xl border-2 border-dashed border-edge/10 py-8 text-center text-sm text-muted">' + esc(t('doneEmpty')) + '</p>';
 }
 
 function todayStats() {
   const start = Date.parse(todayStartISO());
-  const today = [...state.orders.values()].filter((o) => Date.parse(o.created_at) >= start && !['rejected', 'cancelled'].includes(o.status));
+  const today = [...state.orders.values()].filter((o) => Date.parse(o.created_at) >= start && !['rejected', 'cancelled'].includes(o.status) && !o.is_test);
   const revenue = today.reduce((s, o) => s + o.total, 0);
   const preps = today.filter((o) => o.accepted_at && o.ready_marked_at).map((o) => (Date.parse(o.ready_marked_at) - Date.parse(o.accepted_at)) / 60000);
   const avg = preps.length ? Math.round(preps.reduce((a, b) => a + b, 0) / preps.length) : null;
@@ -880,7 +910,22 @@ document.addEventListener('click', (e) => {
   if ((b = el('[data-collected]'))) { act(b.getAttribute('data-collected'), 'collected'); return; }
   if ((b = el('[data-reject]'))) { openReject(b.getAttribute('data-reject')); return; }
   if ((b = el('[data-print]'))) { printTicket(b.getAttribute('data-print')); return; }
+  if ((b = el('[data-test]'))) { toggleTest(b.getAttribute('data-test')); return; }
 });
+
+async function toggleTest(id) {
+  const o = state.orders.get(id);
+  if (!o || state.busy.has(id)) return;
+  const next = !o.is_test;
+  state.busy.add(id);
+  const { error } = await sb.rpc('admin_set_order_test', { p_id: id, p_test: next });
+  state.busy.delete(id);
+  if (error) { toast(t('actionFailed')); return; }
+  o.is_test = next;
+  salesView.cache = {};   // monthly sales leave it out (or count it again)
+  renderAll();
+  toast(t(next ? 'markedTest' : 'unmarkedTest'));
+}
 
 /* ====================================================================
  * Sheets: reject, menu, today, sold out, staff, password
@@ -966,7 +1011,8 @@ function openMenuSheet() {
     else if (w === 'soldout') openSoldOut();
     else if (w === 'staff') openStaff();
     else if (w === 'password') openPassword();
-    else if (w === 'signout') { if (confirm(t('signOutConfirm'))) { closeSheet(); sb.auth.signOut(); } }
+    // Only this device: a plain signOut() ends the login on EVERY device of that account (the counter iPad too)
+    else if (w === 'signout') { if (confirm(t('signOutConfirm'))) { closeSheet(); sb.auth.signOut({ scope: 'local' }); } }
   };
 }
 
@@ -993,36 +1039,93 @@ function openToday() {
     '</div>');
 }
 
-function openSoldOut() {
+let soldOutSettings = null;   // { auto_reset } once database update 010 is in
+
+// Through the database function (records who did it and when). Before database update 010 only the owner's direct update exists.
+async function setAvailable(id, on) {
+  let { error } = await sb.rpc('staff_set_sold_out', { p_item: id, p_sold_out: !on });
+  if (error && /PGRST202|staff_set_sold_out/.test((error.code || '') + (error.message || ''))) {
+    const res = await sb.from('menu_items').update({ available: on }).eq('id', id).select('id');
+    error = res.error || (res.data && res.data.length ? null : { message: 'not allowed' });   // blocked silently → show it failed
+  }
+  return error;
+}
+
+function openSoldOut(refresh = true) {
   const cats = ['burgers', 'sides', 'sauces', 'drinks'];
   const items = Object.entries(MENU_DATA.items);
+  const admin = state.me && state.me.role === 'admin';
+  const off = items.filter(([id]) => state.avail[id] === false).map(([id]) => id);
+  const timeOf = (iso) => new Date(iso).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Baghdad' });
+  const status = (id, on) => {
+    if (on) return t('available');
+    const i = state.soldInfo[id];
+    return t('soldOutLabel') + (i ? ' · ' + t('soldOutSince').replace('{t}', timeOf(i.at)) + (i.by ? ' · ' + t('soldOutBy').replace('{n}', i.by) : '') : '');
+  };
+  // Morning reset (010): everyone sees it, only the owner can switch it
+  const auto = soldOutSettings
+    ? '<button type="button" data-auto-reset role="switch" aria-checked="' + !!soldOutSettings.auto_reset + '" ' + (admin ? '' : 'disabled') + ' class="mb-3 flex w-full items-center gap-3 rounded-2xl p-3 text-start ring-1 ring-edge/10 transition enabled:hover:ring-brand/40">' +
+        '<span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand"><i data-lucide="sunrise" class="h-5 w-5"></i></span>' +
+        '<span class="min-w-0 flex-1"><span class="block text-sm font-bold">' + esc(t('autoReset')) + '</span>' +
+          '<span class="block text-[11px] text-muted">' + esc(t('autoResetSub') + (admin ? '' : ' · ' + t('autoResetOwner'))) + '</span></span>' +
+        '<span class="switch ' + (soldOutSettings.auto_reset ? 'is-on' : '') + (admin ? '' : ' opacity-60') + '" aria-hidden="true"></span>' +
+      '</button>'
+    : '';
+  const allOn = off.length
+    ? '<button type="button" data-all-on class="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-surfaceAlt px-4 py-2.5 text-sm font-bold ring-1 ring-edge/10 transition hover:ring-brand/40 active:scale-[.99]">' +
+        '<i data-lucide="rotate-ccw" class="h-4 w-4 text-brand"></i>' + esc(t('allBackOn')) + '<span class="tnum rounded-full bg-brand px-2 py-0.5 text-[11px] text-white">' + off.length + '</span></button>'
+    : '';
+  const keepScroll = $('sheetPanel').querySelector('[data-so-list]');
+  const top = keepScroll ? keepScroll.scrollTop : 0;
   openSheet(sheetHeader(t('soldOut'), t('soldOutSub')) +
-    '<div class="overflow-y-auto px-5 py-4">' + cats.map((c) => {
+    '<div data-so-list class="overflow-y-auto px-5 py-4">' + auto + allOn + cats.map((c) => {
       const list = items.filter(([, m]) => m.category === c);
       return '<div class="mb-4 space-y-2">' + list.map(([id, m]) => {
         const on = state.avail[id] !== false;
-        return '<button type="button" data-avail="' + id + '" class="flex w-full items-center gap-3 rounded-2xl bg-surfaceAlt p-2 pe-3 text-start ring-1 ring-edge/5 transition active:scale-[.99]">' +
+        return '<button type="button" data-avail="' + id + '" role="switch" aria-checked="' + on + '" class="flex w-full items-center gap-3 rounded-2xl bg-surfaceAlt p-2 pe-3 text-start ring-1 ring-edge/5 transition active:scale-[.99]">' +
           '<span class="h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-surface ' + (on ? '' : 'grayscale opacity-50') + '"><img src="' + esc(m.thumb) + '" alt="" class="h-full w-full object-cover" /></span>' +
           '<span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold ' + (on ? '' : 'text-muted line-through') + '">' + esc(m.name[state.lang] || m.name.en) + '</span>' +
-            '<span class="text-[11px] font-bold ' + (on ? '' : 'text-brand') + '" style="' + (on ? 'color:rgb(var(--c-ok))' : '') + '">' + esc(on ? t('available') : t('soldOutLabel')) + '</span></span>' +
+            '<span class="block truncate text-[11px] font-bold ' + (on ? '' : 'text-brand') + '" style="' + (on ? 'color:rgb(var(--c-ok))' : '') + '">' + esc(status(id, on)) + '</span></span>' +
           '<span class="switch ' + (on ? 'is-on' : '') + '" aria-hidden="true"></span>' +
         '</button>';
       }).join('') + '</div>';
     }).join('') + '</div>');
+  if (top) $('sheetPanel').querySelector('[data-so-list]').scrollTop = top;
+  // Another device may have changed something since this one loaded: refresh once, then redraw
+  if (refresh) {
+    Promise.all([loadAvailability(), sb.rpc('staff_sold_out_settings')]).then(([, s]) => {
+      if (!s.error && s.data) soldOutSettings = s.data;
+      if ($('sheetPanel').querySelector('[data-so-list]') && !$('sheetRoot').classList.contains('hidden')) openSoldOut(false);
+    }).catch(() => {});
+  }
   $('sheetPanel').onclick = async (e) => {
+    if (e.target.closest('[data-auto-reset]')) {
+      if (!admin || !soldOutSettings) return;
+      const next = !soldOutSettings.auto_reset;
+      const { error } = await sb.rpc('admin_set_auto_reset_sold_out', { p_on: next });
+      if (error) { toast(t('actionFailed')); return; }
+      soldOutSettings.auto_reset = next;
+      openSoldOut(false);
+      toast(t('saved'));
+      return;
+    }
+    if (e.target.closest('[data-all-on]')) {
+      if (!confirm(t('allBackOnConfirm'))) return;
+      off.forEach((id) => { state.avail[id] = true; state.soldInfo[id] = null; });
+      openSoldOut(false);
+      const failed = [];
+      for (const id of off) if (await setAvailable(id, true)) failed.push(id);
+      if (failed.length) { failed.forEach((id) => { state.avail[id] = false; }); openSoldOut(); toast(t('actionFailed')); }
+      return;
+    }
     const b = e.target.closest('[data-avail]');
     if (!b) return;
     const id = b.getAttribute('data-avail');
     const next = state.avail[id] === false;
     state.avail[id] = next;
-    openSoldOut();
-    // Through the database function (records who did it). Before database update 010 only the owner's direct update exists.
-    let { error } = await sb.rpc('staff_set_sold_out', { p_item: id, p_sold_out: !next });
-    if (error && /PGRST202|staff_set_sold_out/.test((error.code || '') + (error.message || ''))) {
-      const res = await sb.from('menu_items').update({ available: next }).eq('id', id).select('id');
-      error = res.error || (res.data && res.data.length ? null : { message: 'not allowed' });   // blocked silently → show it failed
-    }
-    if (error) { state.avail[id] = !next; openSoldOut(); toast(t('actionFailed')); }
+    state.soldInfo[id] = next ? null : { at: new Date().toISOString(), by: state.me && state.me.name };
+    openSoldOut(false);
+    if (await setAvailable(id, next)) { state.avail[id] = !next; openSoldOut(); toast(t('actionFailed')); }
   };
 }
 
@@ -1041,7 +1144,7 @@ async function staffCall(body) {
 async function openStaff() {
   openSheet(sheetHeader(t('staffAccounts'), t('staffSub')) + '<div class="grid place-items-center py-12"><i data-lucide="loader-2" class="h-6 w-6 animate-spin text-brand"></i></div>');
   let list = [];
-  try { list = (await staffCall({ action: 'list' })).staff; } catch { toast(t('actionFailed')); }
+  try { list = (await staffCall({ action: 'list' })).staff || []; } catch { toast(t('actionFailed')); }
   const input = 'w-full rounded-xl border-0 bg-surfaceAlt px-3 py-2.5 text-sm ring-1 ring-edge/5 focus:ring-2 focus:ring-brand/60';
   openSheet(sheetHeader(t('staffAccounts'), t('staffSub')) +
     '<div class="overflow-y-auto px-5 py-4">' +
@@ -1150,17 +1253,20 @@ async function loadMonth(y, m) {
   const to = new Date(Date.UTC(y, m + 1, 1) - ERBIL_MS).toISOString();
   const rows = [];
   // Page through in case of a very busy month
+  const pageOf = (page) => sb.from('orders').select('created_at,total,items,status' + (hasTestCol ? ',is_test' : ''))
+    .gte('created_at', from).lt('created_at', to)
+    .not('status', 'in', '(rejected,cancelled)')
+    .order('created_at').range(page * 1000, page * 1000 + 999);
   for (let page = 0; page < 20; page++) {
-    const { data, error } = await sb.from('orders').select('created_at,total,items,status')
-      .gte('created_at', from).lt('created_at', to)
-      .not('status', 'in', '(rejected,cancelled)')
-      .order('created_at').range(page * 1000, page * 1000 + 999);
+    let { data, error } = await pageOf(page);
+    if (noColumn(error) && hasTestCol) { hasTestCol = false; ({ data, error } = await pageOf(page)); }
     if (error) throw error;
     rows.push(...data);
     if (data.length < 1000) break;
   }
   const days = {};
   for (const o of rows) {
+    if (o.is_test) continue;   // marked as a test order by the owner
     const d = erbilParts(new Date(o.created_at)).d;
     const day = days[d] || (days[d] = { orders: 0, revenue: 0, items: {} });
     day.orders += 1;

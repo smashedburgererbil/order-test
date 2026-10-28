@@ -456,7 +456,7 @@
   @media (prefers-reduced-motion: reduce) { .ios-step, .ios-arrow, .trk-panel, .trk-icon, .trk-pulse, .trk-now, .trk-title, .trk-ready, .trk-chip { animation: none !important; } }
 </style>
 <!-- Prebuilt Tailwind: loaded last so utilities win, like the old CDN build did. Rebuild with: npx tailwindcss@3.4.17 -c tailwind.config.js -i tailwind.input.css -o tailwind.css --minify -->
-<link rel="stylesheet" href="tailwind.css?v=20261018f" />
+<link rel="stylesheet" href="tailwind.css?v=20261027a" />
 <!-- Visitor stats (GoatCounter — free, no cookies). Dashboard: https://smashedburgererbil.goatcounter.com -->
 <script data-goatcounter="https://smashedburgererbil.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
@@ -1138,6 +1138,8 @@ const HOURS = [
 // Filled from the order system (owner page → Opening hours): special dates + last-order minutes before closing
 let SPECIAL_DAYS = {};
 let LAST_ORDER_MIN = 15;
+// Owner page → Opening hours → "Only take orders during opening hours" switched off (testing): always open
+let ALWAYS_OPEN = false;
 
 const STORE = {
   phone:     '+9647508030803',
@@ -1647,6 +1649,7 @@ function dayWindow(p, k) {
 // open = taking orders now · secs = until last orders (open) or until opening (closed) · soon = last 30 min
 function getStoreStatus() {
   const p = getStoreTimeParts();
+  if (ALWAYS_OPEN) return { day: p.day, open: true, secs: 0 };
   const now = p.hour * 3600 + p.minute * 60 + p.second;
   for (const k of [-1, 0]) {
     const w = dayWindow(p, k);
@@ -1685,6 +1688,7 @@ function applySchedule(d) {
   SPECIAL_DAYS = {};
   (d.special || []).forEach((x) => { SPECIAL_DAYS[x.day] = x; });
   LAST_ORDER_MIN = Math.max(0, Number(d.last_order_minutes) || 0);
+  ALWAYS_OPEN = d.enforce_hours === false;
   renderHoursList();
 }
 
@@ -2929,10 +2933,10 @@ window.addEventListener('load', refreshIcons);
 </script>
 <!-- Order system (instead of WhatsApp ordering) -->
 <script src="js/config.js"></script>
-<script src="js/ordering.js?v=20261018f"></script>
-<script src="js/offers.js?v=20261018f"></script>
+<script src="js/ordering.js?v=20261027a"></script>
+<script src="js/offers.js?v=20261027a"></script>
 <!-- Table reservations -->
-<script src="js/floorplan.js?v=20261018f"></script>
-<script src="js/reserve.js?v=20261018f"></script>
+<script src="js/floorplan.js?v=20261027a"></script>
+<script src="js/reserve.js?v=20261027a"></script>
 </body>
 </html>

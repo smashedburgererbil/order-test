@@ -87,6 +87,9 @@
   .backdrop-in { animation: fadeIn .2s ease-out both; }
   .sales-detail { animation: riseIn .4s cubic-bezier(.22,1,.36,1) both; }
   .ring-out { position: absolute; inset: 0; border-radius: 9999px; border: 2px solid rgb(var(--c-accent)); animation: ringOut 1.4s ease-out infinite; }
+  /* Busy times: the hovered / tapped heat cell or column */
+  .bt-on { position: relative; z-index: 1; box-shadow: 0 0 0 2px rgb(var(--c-surface)), 0 0 0 3.5px rgb(var(--c-ink) / .7); }
+  .bt-on-col > div { filter: brightness(1.15) saturate(1.1); }
 
   /* Countdown ring */
   .cd-ring circle { transition: stroke-dashoffset 1s linear, stroke .3s ease; }
@@ -110,7 +113,7 @@
     *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   }
 </style>
-<link rel="stylesheet" href="tailwind.css?v=20261018f" />
+<link rel="stylesheet" href="tailwind.css?v=20261027a" />
 </head>
 
 <body class="min-h-screen bg-base font-sans text-ink antialiased selection:bg-brand/30">
@@ -248,12 +251,13 @@
 <script src="https://unpkg.com/lucide@0.451.0/dist/umd/lucide.js"></script>
 <script src="js/config.js"></script>
 <script src="js/menu-data.js"></script>
-<script src="js/staff.js?v=20261018f"></script>
+<script src="js/staff.js?v=20261027a"></script>
 <!-- Table reservations -->
-<script src="js/floorplan.js?v=20261018f"></script>
-<script src="js/staff-reservations.js?v=20261018f"></script>
-<script src="js/staff-hours.js?v=20261018f"></script>
-<script src="js/staff-feedback.js?v=20261018f"></script>
-<script src="js/staff-offers.js?v=20261018f"></script>
+<script src="js/floorplan.js?v=20261027a"></script>
+<script src="js/staff-reservations.js?v=20261027a"></script>
+<script src="js/staff-hours.js?v=20261027a"></script>
+<script src="js/staff-reports.js?v=20261027a"></script>
+<script src="js/staff-feedback.js?v=20261027a"></script>
+<script src="js/staff-offers.js?v=20261027a"></script>
 </body>
 </html>
