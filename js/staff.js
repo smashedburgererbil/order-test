@@ -56,6 +56,9 @@ const I18N = {
     markedTest: 'Marked as a test order — left out of sales', unmarkedTest: 'Counted in sales again',
     soldOutSince: 'since {t}', soldOutBy: 'by {n}', allBackOn: 'Switch all back on', allBackOnConfirm: 'Switch every sold-out item back on?',
     autoReset: 'Back on every morning', autoResetSub: 'At 9:00 every sold-out item is switched back on by itself', autoResetOwner: 'Only the owner can change this', saved: 'Saved',
+    hr: 'h', yesterday: 'Yesterday', staleNote: 'Waiting for over 2 hours, so it no longer rings. Is the customer still here?', clearOrder: 'Clear order',
+    clearConfirm: 'Clear this old order? The customer is told it timed out.', reasonExpired: 'Sorry, this order timed out. Please order again or ask the cashier.',
+    loyaltyReward: 'Loyalty reward', loyaltyTakeOff: 'take it off the bill', stampCard: 'Stamp card', rewardUsed: 'Reward used', stampEarned: '+1 stamp',
   },
   ku: {
     dir: 'rtl', short: 'ک', native: 'کوردی',
@@ -95,6 +98,9 @@ const I18N = {
     markedTest: 'وەک داواکاری تاقیکاری دانرا — لە فرۆشتن ناژمێردرێت', unmarkedTest: 'دووبارە لە فرۆشتن دەژمێردرێت',
     soldOutSince: 'لە {t}ەوە', soldOutBy: 'لەلایەن {n}', allBackOn: 'هەمووی هەڵبکەرەوە', allBackOnConfirm: 'هەموو خواردنە نەماوەکان دووبارە هەڵبکرێنەوە؟',
     autoReset: 'هەموو بەیانییەک دووبارە هەڵدەکرێنەوە', autoResetSub: 'لە کاتژمێر ٩:٠٠ هەموو خواردنە نەماوەکان خۆیان هەڵدەکرێنەوە', autoResetOwner: 'تەنها خاوەن دەتوانێت ئەمە بگۆڕێت', saved: 'پاشەکەوت کرا',
+    hr: 'کاتژمێر', yesterday: 'دوێنێ', staleNote: 'زیاتر لە ٢ کاتژمێرە چاوەڕێیە، بۆیە ئیتر زەنگ لێنادات. کڕیارەکە هێشتا لێرەیە؟', clearOrder: 'سڕینەوەی داواکاری',
+    clearConfirm: 'ئەم داواکارییە کۆنە بسڕدرێتەوە؟ بە کڕیار دەوترێت کاتەکەی بەسەرچوو.', reasonExpired: 'ببورە، کاتی ئەم داواکارییە بەسەرچوو. تکایە دووبارە داوا بکە یان پرسیار لە کاشێر بکە.',
+    loyaltyReward: 'خەڵاتی کارتی خاڵ', loyaltyTakeOff: 'لە پسوڵەکە لای ببە', stampCard: 'کارتی خاڵ', rewardUsed: 'خەڵات وەرگیرا', stampEarned: '+١ خاڵ',
   },
   ar: {
     dir: 'rtl', short: 'ع', native: 'العربية',
@@ -134,6 +140,9 @@ const I18N = {
     markedTest: 'تم تعليمه كطلب تجريبي — لا يُحسب في المبيعات', unmarkedTest: 'يُحسب في المبيعات مرة أخرى',
     soldOutSince: 'منذ {t}', soldOutBy: 'بواسطة {n}', allBackOn: 'تشغيل الكل من جديد', allBackOnConfirm: 'إعادة كل الأصناف النافدة إلى متوفر؟',
     autoReset: 'إعادة التشغيل كل صباح', autoResetSub: 'في الساعة 9:00 تعود كل الأصناف النافدة متوفرة تلقائياً', autoResetOwner: 'المالك فقط يستطيع تغيير هذا', saved: 'تم الحفظ',
+    hr: 'س', yesterday: 'أمس', staleNote: 'ينتظر منذ أكثر من ساعتين، لذلك توقف التنبيه. هل ما زال الزبون هنا؟', clearOrder: 'إزالة الطلب',
+    clearConfirm: 'إزالة هذا الطلب القديم؟ سيتم إبلاغ الزبون بانتهاء مهلته.', reasonExpired: 'عذراً، انتهت مهلة هذا الطلب. يرجى الطلب مرة أخرى أو مراجعة الكاشير.',
+    loyaltyReward: 'مكافأة بطاقة الأختام', loyaltyTakeOff: 'اخصمها من الفاتورة', stampCard: 'بطاقة الأختام', rewardUsed: 'تم استخدام المكافأة', stampEarned: '+١ ختم',
   },
 };
 
@@ -154,6 +163,7 @@ const state = {
   shiftStarted: false,
   avail: {},              // item id -> available
   soldInfo: {},           // item id -> { at, by } while sold out (database update 010)
+  loyalty: null,          // { goal, reward, min_total } while the stamp card is on (016)
   busy: new Set(),        // order ids with an action in flight
 };
 
@@ -306,8 +316,13 @@ document.addEventListener('visibilitychange', () => { if (state.shiftStarted && 
 
 // Keeps ringing every few seconds while there are new orders nobody has accepted yet
 let alarmTimer = null;
+// A new order nobody answered for 2 hours: the customer has most likely gone, so it stops ringing
+const STALE_MS = 2 * 3600 * 1000;
+const isStale = (o) => o.status === 'pending' && Date.now() - Date.parse(o.created_at) > STALE_MS;
+
 function updateAlarm() {
-  const pending = [...state.orders.values()].some((o) => o.status === 'pending');
+  const fresh = [...state.orders.values()].filter((o) => o.status === 'pending' && !isStale(o));
+  const pending = fresh.length > 0;
   if (pending && state.shiftStarted && state.soundOn) {
     if (!alarmTimer) {
       chimeNewOrder();
@@ -318,7 +333,7 @@ function updateAlarm() {
     alarmTimer = null;
   }
   // Tab title flashes the count so it's visible even in another tab
-  const n = [...state.orders.values()].filter((o) => o.status === 'pending').length;
+  const n = fresh.length;
   document.title = (n ? '(' + n + ') ' : '') + 'Smashed Burger — Staff';
 }
 
@@ -398,9 +413,15 @@ async function afterLogin() {
   state.me = row;
   $('shiftWho').textContent = t('signedInAs') + ' ' + (row.name || state.session.user.email) + ' · ' + (row.role === 'admin' ? t('roleAdmin') : t('roleCashier'));
   show('shiftView');
-  await Promise.all([loadOrders(), loadAvailability()]);
+  await Promise.all([loadOrders(), loadAvailability(), loadLoyalty()]);
   subscribeLive();
   renderAll();
+}
+
+// 016: stamp-card settings (the reward text shown on order cards). Null while it's off or not set up.
+async function loadLoyalty() {
+  const { data, error } = await sb.rpc('get_loyalty_config');
+  state.loyalty = !error && data ? data : null;
 }
 
 $('startShiftBtn').addEventListener('click', () => {
@@ -444,14 +465,22 @@ let clockOffset = 0;
 // Columns added by later database updates are asked for only once the database has them
 // (42703 = no such column → ask again without them)
 const noColumn = (error) => error && error.code === '42703';
-let hasTestCol = true;   // 012: orders.is_test
+// 012: is_test · 016: loyalty_phone, loyalty_reward — each is dropped from the query if the database doesn't have it
+let extraCols = ['is_test', 'loyalty_phone', 'loyalty_reward'];
+const hasCol = (c) => extraCols.includes(c);
+async function withExtraCols(run, base) {
+  for (;;) {
+    const res = await run(base + extraCols.map((c) => ',' + c).join(''));
+    const m = noColumn(res.error) && /column \w+\.(\w+) does not exist/.exec(res.error.message || '');
+    if (!m || !hasCol(m[1])) return res;
+    extraCols = extraCols.filter((c) => c !== m[1]);
+  }
+}
 
 async function loadOrders() {
-  const query = (cols) => sb.from('orders').select(cols)
+  const { data, error } = await withExtraCols((cols) => sb.from('orders').select(cols)
     .or('created_at.gte.' + todayStartISO() + ',status.in.(pending,accepted,ready)')
-    .order('created_at', { ascending: true });
-  let { data, error } = await query(ORDER_COLS + (hasTestCol ? ',is_test' : ''));
-  if (noColumn(error) && hasTestCol) { hasTestCol = false; ({ data, error } = await query(ORDER_COLS)); }
+    .order('created_at', { ascending: true }), ORDER_COLS);
   if (error) { setOnline(false); return; }
   const fresh = new Map();
   for (const o of data) fresh.set(o.id, o);
@@ -592,11 +621,24 @@ function optionName(opt) {
   return (l && (l[state.lang] || l.en)) || opt.label_en;
 }
 
-function minutesAgo(iso) {
+// "5 min ago", "1 h 20 min ago", "5 h ago", then "Yesterday 18:05" / "26/10 18:05".
+// plain = just the length of time ("Waiting 25 min"), with whole days for very old ones.
+function timeAgo(iso, plain) {
   const m = Math.floor((Date.now() - Date.parse(iso)) / 60000);
   if (m < 1) return t('justNow');
-  return m + ' ' + t('min') + ' ' + t('ago');
+  let s;
+  if (m < 60) s = m + ' ' + t('min');
+  else if (m < 180) s = Math.floor(m / 60) + ' ' + t('hr') + (m % 60 ? ' ' + (m % 60) + ' ' + t('min') : '');
+  else if (m < 1440 || plain) s = Math.floor(m / 60) + ' ' + t('hr');
+  else {
+    const erbil = (ms) => new Date(ms + ERBIL_MS).toISOString();
+    const day = erbil(Date.parse(iso)).slice(0, 10), clock = erbil(Date.parse(iso)).slice(11, 16);
+    if (day === erbil(Date.now() - 864e5).slice(0, 10)) return t('yesterday') + ' ' + clock;
+    return day.slice(8, 10) + '/' + day.slice(5, 7) + ' ' + clock;
+  }
+  return plain ? s : s + ' ' + t('ago');
 }
+const minutesAgo = (iso) => timeAgo(iso);
 
 function itemsHtml(o, compact) {
   return '<ul class="' + (compact ? 'space-y-0.5' : 'space-y-2') + '">' + (o.items || []).map((line) => {
@@ -699,7 +741,7 @@ function preparingActions(o) {
 function readyActions(o) {
   const busy = state.busy.has(o.id);
   return '<div class="mt-4 flex items-center gap-2 rounded-2xl bg-[rgb(var(--c-ok)/.12)] px-3 py-2.5 text-sm font-semibold" style="color:rgb(var(--c-ok))">' +
-      '<i data-lucide="clock" class="h-4 w-4"></i><span>' + esc(t('readyFor')) + ' <span class="tnum" data-ago-plain="' + esc(o.ready_marked_at || o.updated_at) + '">' + esc(minutesAgo(o.ready_marked_at || o.updated_at).replace(' ' + t('ago'), '')) + '</span></span>' +
+      '<i data-lucide="clock" class="h-4 w-4"></i><span>' + esc(t('readyFor')) + ' <span class="tnum" data-ago-plain="' + esc(o.ready_marked_at || o.updated_at) + '">' + esc(timeAgo(o.ready_marked_at || o.updated_at, true)) + '</span></span>' +
     '</div>' +
     '<div class="mt-3 grid grid-cols-2 gap-2">' +
       '<button type="button" data-ring="' + o.id + '" ' + (busy ? 'disabled' : '') + ' class="flex items-center justify-center gap-1.5 rounded-xl bg-surfaceAlt px-3 py-3 text-sm font-bold ring-1 ring-edge/5 transition hover:ring-brand/40 active:scale-[.98] disabled:opacity-50"><i data-lucide="bell" class="h-4 w-4 text-brand"></i>' + esc(t('ringAgain')) + '</button>' +
@@ -707,11 +749,34 @@ function readyActions(o) {
     '</div>';
 }
 
+// 016: the customer added their phone → stamp card; a full card → reward the cashier takes off the bill
+function loyaltyHtml(o) {
+  if (!o.loyalty_phone) return '';
+  const end = '··' + String(o.loyalty_phone).slice(-4);
+  if (o.loyalty_reward) {
+    const r = state.loyalty && state.loyalty.reward;
+    return '<div class="mt-3 flex items-start gap-2.5 rounded-2xl px-3 py-2.5 text-sm ring-1" style="background:rgb(var(--c-warn)/.14);border-color:transparent;--tw-ring-color:rgb(var(--c-warn)/.4)">' +
+      '<span class="text-lg leading-none" aria-hidden="true">🎁</span><span class="min-w-0"><span class="block font-extrabold" style="color:rgb(var(--c-warn))">' + esc(t('loyaltyReward')) + '</span>' +
+      '<span class="block text-xs font-semibold">' + esc((r && (r[state.lang] || r.en)) || '') + ' — ' + esc(t('loyaltyTakeOff')) + ' <span class="tnum text-muted" dir="ltr">' + esc(end) + '</span></span></span></div>';
+  }
+  return '<p class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-surfaceAlt px-2.5 py-1 text-[11px] font-bold text-muted"><span aria-hidden="true">⭐</span>' + esc(t('stampCard')) + ' <span class="tnum" dir="ltr">' + esc(end) + '</span></p>';
+}
+
+function staleBox(o) {
+  return '<div class="mt-4 rounded-2xl bg-surfaceAlt p-3 ring-1 ring-edge/10">' +
+    '<p class="flex items-start gap-2 text-xs font-semibold text-muted"><i data-lucide="bell-off" class="mt-0.5 h-4 w-4 shrink-0"></i>' + esc(t('staleNote')) + '</p>' +
+    '<button type="button" data-clear="' + o.id + '" ' + (state.busy.has(o.id) ? 'disabled' : '') + ' class="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl bg-surface px-3 py-2.5 text-sm font-bold text-brand ring-1 ring-brand/30 transition hover:bg-brand/5 active:scale-[.98] disabled:opacity-50">' +
+      '<i data-lucide="archive-x" class="h-4 w-4"></i>' + esc(t('clearOrder')) + '</button>' +
+  '</div>';
+}
+
 function renderCard(o) {
-  const body = o.status === 'pending' ? pendingActions(o) : o.status === 'accepted' ? preparingActions(o) : readyActions(o);
-  return '<article data-order="' + o.id + '" class="rounded-3xl bg-surface p-4 shadow-card ring-1 ring-edge/5 ' + (o.status === 'pending' ? 'is-pending' : '') + '">' +
+  const stale = isStale(o);
+  const body = o.status === 'pending' ? (stale ? staleBox(o) : '') + pendingActions(o) : o.status === 'accepted' ? preparingActions(o) : readyActions(o);
+  return '<article data-order="' + o.id + '" class="rounded-3xl bg-surface p-4 shadow-card ring-1 ring-edge/5 ' + (o.status === 'pending' && !stale ? 'is-pending' : '') + '">' +
     cardHead(o) +
     '<div class="mt-4">' + itemsHtml(o) + '</div>' +
+    loyaltyHtml(o) +
     totalRow(o) + body +
   '</article>';
 }
@@ -753,7 +818,8 @@ function renderBoard() {
     // Remove cards that left this column
     [...list.children].forEach((node) => { if (!wanted.has(node.dataset.order)) node.remove(); });
     items.forEach((o, idx) => {
-      const ver = [o.status, o.updated_at, state.draftMinutes[o.id], state.busy.has(o.id), state.lang].join('|');
+      const ver = [o.status, o.updated_at, state.draftMinutes[o.id], state.busy.has(o.id), state.lang, isStale(o), o.loyalty_phone, o.loyalty_reward,
+        o.loyalty_reward && state.loyalty ? JSON.stringify(state.loyalty.reward) : ''].join('|');
       let node = cardNodes.get(o.id);
       const fresh = !node || node.parentElement !== list;
       if (!node || cardVersion.get(o.id) !== ver) {
@@ -816,12 +882,16 @@ function renderDone() {
     const time = new Date(o.updated_at).toLocaleTimeString(state.lang === 'en' ? 'en-GB' : state.lang === 'ar' ? 'ar-IQ' : 'ckb-IQ', { hour: '2-digit', minute: '2-digit' });
     // 012: the owner marks test orders, so they stay out of sales and reports
     const testBadge = o.is_test ? '<span class="rounded-full bg-edge/10 px-2 py-0.5 text-[11px] font-bold text-muted" title="' + esc(t('testHint')) + '">' + esc(t('testBadge')) + '</span>' : '';
-    const testBtn = admin && hasTestCol && o.status === 'collected'
+    const testBtn = admin && hasCol('is_test') && o.status === 'collected'
       ? '<button type="button" data-test="' + o.id + '" title="' + esc(t('testHint')) + '" class="mt-2 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-muted ring-1 ring-edge/10 transition hover:text-ink">' +
           '<i data-lucide="' + (o.is_test ? 'undo-2' : 'flask-conical') + '" class="h-3.5 w-3.5"></i>' + esc(t(o.is_test ? 'unmarkTest' : 'markTest')) + '</button>'
       : '';
+    // 016: what the stamp card got from this order
+    const loyal = o.loyalty_phone && o.status === 'collected' && (o.loyalty_reward || o.total >= ((state.loyalty && state.loyalty.min_total) || 0))
+      ? '<span class="rounded-full bg-surfaceAlt px-2 py-0.5 text-[11px] font-bold text-muted">' + (o.loyalty_reward ? '🎁 ' + esc(t('rewardUsed')) : '⭐ ' + esc(t('stampEarned'))) + '</span>'
+      : '';
     return '<div class="rounded-2xl bg-surface p-3 ring-1 ring-edge/5' + (o.is_test ? ' opacity-60' : '') + '">' +
-      '<div class="flex items-center gap-2"><span class="font-display text-xl tnum">#' + o.code + '</span>' + st + testBadge +
+      '<div class="flex flex-wrap items-center gap-2"><span class="font-display text-xl tnum">#' + o.code + '</span>' + st + testBadge + loyal +
         '<span class="ms-auto text-xs text-muted tnum">' + esc(time) + '</span></div>' +
       '<p class="mt-1 text-xs text-muted">' + esc(placeLabel(o)) + ' · ' + esc(money(o.total)) + '</p>' +
       '<div class="mt-2 text-muted">' + itemsHtml(o, true) + '</div>' +
@@ -884,7 +954,7 @@ setInterval(() => {
     if (box) { box.classList.toggle('is-late', cd.late); box.classList.toggle('bg-surfaceAlt', !cd.late); }
   }
   document.querySelectorAll('[data-ago]').forEach((el) => { el.textContent = minutesAgo(el.getAttribute('data-ago')); });
-  document.querySelectorAll('[data-ago-plain]').forEach((el) => { el.textContent = minutesAgo(el.getAttribute('data-ago-plain')).replace(' ' + t('ago'), ''); });
+  document.querySelectorAll('[data-ago-plain]').forEach((el) => { el.textContent = timeAgo(el.getAttribute('data-ago-plain'), true); });
 }, 1000);
 
 /* ====================================================================
@@ -911,6 +981,11 @@ document.addEventListener('click', (e) => {
   if ((b = el('[data-reject]'))) { openReject(b.getAttribute('data-reject')); return; }
   if ((b = el('[data-print]'))) { printTicket(b.getAttribute('data-print')); return; }
   if ((b = el('[data-test]'))) { toggleTest(b.getAttribute('data-test')); return; }
+  if ((b = el('[data-clear]'))) {
+    const o = state.orders.get(b.getAttribute('data-clear'));
+    if (o && confirm(t('clearConfirm'))) act(o.id, 'reject', { reason: tIn(o.lang, 'reasonExpired') });
+    return;
+  }
 });
 
 async function toggleTest(id) {
@@ -1253,13 +1328,13 @@ async function loadMonth(y, m) {
   const to = new Date(Date.UTC(y, m + 1, 1) - ERBIL_MS).toISOString();
   const rows = [];
   // Page through in case of a very busy month
-  const pageOf = (page) => sb.from('orders').select('created_at,total,items,status' + (hasTestCol ? ',is_test' : ''))
+  const pageOf = (page) => sb.from('orders').select('created_at,total,items,status' + (hasCol('is_test') ? ',is_test' : ''))
     .gte('created_at', from).lt('created_at', to)
     .not('status', 'in', '(rejected,cancelled)')
     .order('created_at').range(page * 1000, page * 1000 + 999);
   for (let page = 0; page < 20; page++) {
     let { data, error } = await pageOf(page);
-    if (noColumn(error) && hasTestCol) { hasTestCol = false; ({ data, error } = await pageOf(page)); }
+    if (noColumn(error) && hasCol('is_test')) { extraCols = extraCols.filter((c) => c !== 'is_test'); ({ data, error } = await pageOf(page)); }
     if (error) throw error;
     rows.push(...data);
     if (data.length < 1000) break;
@@ -1394,8 +1469,11 @@ function printTicket(id) {
   const o = state.orders.get(id);
   if (!o) return;
   const time = new Date(o.created_at).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
+  const reward = o.loyalty_reward && state.loyalty && state.loyalty.reward && state.loyalty.reward.en;
+  // The dark-on-white logo, in pure black for receipt printers (the name is printed under it in case the image is missing)
   $('printArea').innerHTML =
-    '<div style="text-align:center;font-weight:800;font-size:16px">SMASHED BURGER</div>' +
+    '<div style="text-align:center"><img src="image/lightsidelogo.webp" alt="" style="display:block;margin:0 auto;width:52mm;max-width:100%;filter:grayscale(1) contrast(1.8)" /></div>' +
+    '<div style="text-align:center;font-weight:800;font-size:11px;letter-spacing:.2em">SMASHED BURGER</div>' +
     '<div style="text-align:center;font-size:34px;font-weight:900;margin:6px 0">#' + o.code + '</div>' +
     '<div style="text-align:center;font-size:15px;font-weight:700">' + esc(o.order_type === 'takeaway' ? 'TAKEAWAY' : 'TABLE ' + (o.table_no || '?')) + '</div>' +
     '<div style="text-align:center;font-size:11px;margin-bottom:8px">' + esc(time) + '</div>' +
@@ -1404,8 +1482,14 @@ function printTicket(id) {
       '<div style="margin:6px 0"><div style="font-size:14px;font-weight:800">' + l.qty + '× ' + esc(l.name_en) + '</div>' +
       (l.options || []).map((op) => '<div style="font-size:12px;padding-left:14px">• ' + esc(op.label_en) + '</div>').join('') + '</div>').join('') +
     '<hr style="border:0;border-top:1px dashed #000" />' +
-    '<div style="display:flex;justify-content:space-between;font-weight:800;font-size:14px"><span>TOTAL</span><span>' + esc(money(o.total)) + '</span></div>';
-  window.print();
+    '<div style="display:flex;justify-content:space-between;font-weight:800;font-size:14px"><span>TOTAL</span><span>' + esc(money(o.total)) + '</span></div>' +
+    (o.loyalty_reward ? '<div style="margin-top:6px;border:2px solid #000;padding:4px;text-align:center;font-weight:800;font-size:13px">LOYALTY REWARD' + (reward ? ': ' + esc(reward) : '') + '<br />take it off the bill</div>' : '');
+  // Print once the logo has loaded (it's cached after the first ticket), or after 1.5 s at the latest
+  const img = $('printArea').querySelector('img');
+  let done = false;
+  const go = () => { if (done) return; done = true; window.print(); };
+  if (img.complete) go();
+  else { img.onload = go; img.onerror = () => { img.remove(); go(); }; setTimeout(go, 1500); }
 }
 
 /* ====================================================================
